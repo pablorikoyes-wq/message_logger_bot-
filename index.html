@@ -4,6 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>Переписки</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         * {
             margin: 0;
@@ -19,7 +20,6 @@
             padding: 16px;
         }
 
-        /* ===== ПАРОЛЬ ===== */
         .password-screen {
             max-width: 400px;
             margin: 80px auto;
@@ -43,48 +43,6 @@
             font-size: 15px;
         }
 
-        .password-screen input {
-            width: 100%;
-            padding: 14px 16px;
-            font-size: 20px;
-            background: #161b22;
-            border: 2px solid #30363d;
-            border-radius: 12px;
-            color: #f0f6fc;
-            text-align: center;
-            letter-spacing: 6px;
-            margin-top: 20px;
-            transition: border 0.3s;
-        }
-
-        /* ===== ВАЖНО: type="password" скрывает символы ===== */
-        .password-screen input[type="password"] {
-            -webkit-text-security: disc;
-        }
-
-        .password-screen input:focus {
-            border-color: #58a6ff;
-            outline: none;
-        }
-
-        .password-screen button {
-            margin-top: 16px;
-            padding: 14px;
-            background: #238636;
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 17px;
-            font-weight: 600;
-            cursor: pointer;
-            width: 100%;
-            transition: background 0.2s;
-        }
-
-        .password-screen button:hover {
-            background: #2ea043;
-        }
-
         .password-screen .error {
             color: #f85149;
             margin-top: 10px;
@@ -92,7 +50,6 @@
             min-height: 24px;
         }
 
-        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
         .header {
             display: flex;
             align-items: center;
@@ -136,7 +93,6 @@
             opacity: 0.7;
         }
 
-        /* ===== ЧАТЫ ===== */
         .chat-item {
             background: #161b22;
             border-radius: 12px;
@@ -199,19 +155,10 @@
             gap: 4px;
         }
 
-        .chat-item .info .stats .deleted-count {
-            color: #f85149;
-        }
+        .chat-item .info .stats .deleted-count { color: #f85149; }
+        .chat-item .info .stats .edited-count { color: #d29922; }
+        .chat-item .info .stats .total-count { color: #58a6ff; }
 
-        .chat-item .info .stats .edited-count {
-            color: #d29922;
-        }
-
-        .chat-item .info .stats .total-count {
-            color: #58a6ff;
-        }
-
-        /* ===== СООБЩЕНИЯ ===== */
         .message-item {
             background: #161b22;
             border-radius: 12px;
@@ -221,13 +168,8 @@
             transition: background 0.2s;
         }
 
-        .message-item:hover {
-            background: #1c2333;
-        }
-
-        .message-item.normal {
-            border-left-color: #238636;
-        }
+        .message-item:hover { background: #1c2333; }
+        .message-item.normal { border-left-color: #238636; }
 
         .message-item.deleted {
             border-left-color: #f85149;
@@ -241,16 +183,7 @@
             text-decoration: line-through;
         }
 
-        .message-item.deleted .deleted-label {
-            color: #f85149;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 10px;
-        }
-
-        .message-item.edited {
-            border-left-color: #d29922;
-        }
+        .message-item.edited { border-left-color: #d29922; }
 
         .message-item .sender {
             font-weight: 600;
@@ -290,23 +223,6 @@
             line-height: 1.5;
         }
 
-        .message-item .text .edited-arrow {
-            color: #d29922;
-            font-size: 18px;
-            margin: 0 6px;
-        }
-
-        .message-item .text .original-text {
-            color: #8b949e;
-            font-style: italic;
-            text-decoration: line-through;
-            margin-right: 8px;
-        }
-
-        .message-item .text .new-text {
-            color: #e6edf3;
-        }
-
         .message-item .time {
             font-size: 12px;
             color: #8b949e;
@@ -316,25 +232,16 @@
             flex-wrap: wrap;
         }
 
-        .message-item .time .deleted-time {
-            color: #f85149;
-        }
+        .message-item .time .deleted-time { color: #f85149; }
+        .message-item .time .edited-time { color: #d29922; }
 
-        .message-item .time .edited-time {
-            color: #d29922;
-        }
-
-        /* ===== СТАТУСЫ ===== */
         .empty-state {
             text-align: center;
             padding: 80px 20px;
             color: #8b949e;
         }
 
-        .empty-state .icon {
-            font-size: 48px;
-            margin-bottom: 16px;
-        }
+        .empty-state .icon { font-size: 48px; margin-bottom: 16px; }
 
         .empty-state .title {
             font-size: 18px;
@@ -361,36 +268,19 @@
             100% { content: '...'; }
         }
 
-        /* ===== СКРОЛЛ ===== */
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0d1117; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
-        ::-webkit-scrollbar-track {
-            background: #0d1117;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #30363d;
-            border-radius: 8px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #484f58;
-        }
-
-        /* ===== АДАПТИВ ===== */
         @media (max-width: 480px) {
             body { padding: 12px; }
             .chat-item { padding: 12px 14px; }
             .message-item { padding: 12px 14px; }
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
-        /* ===== СТРЕЛКА ДЛЯ РЕДАКТИРОВАНИЯ ===== */
         .edit-block {
             margin-top: 6px;
             padding: 8px 12px;
@@ -422,17 +312,17 @@
 </head>
 <body>
 
-    <!-- ===== ЭКРАН ПАРОЛЯ ===== -->
-    <div id="password-screen" class="password-screen">
-        <div class="lock-icon">🔐</div>
-        <h2>Введите пароль</h2>
-        <p class="sub">Для доступа к перепискам</p>
+    <!-- Экран "не в Telegram" -->
+    <div id="not-telegram-screen" class="password-screen hidden">
+        <div class="lock-icon">📱</div>
+        <h2>Открой через Telegram</h2>
+        <p class="sub">Это мини-приложение работает только внутри Telegram — открой его через кнопку в боте.</p>
+    </div>
 
-        <!-- ===== ВАЖНО: type="password" — пароль скрыт! ===== -->
-        <input type="password" id="password-input" placeholder="Введите пароль" maxlength="20" />
-
-        <button onclick="login()">Войти</button>
-        <div id="login-error" class="error"></div>
+    <div id="unauthorized-screen" class="password-screen hidden">
+        <div class="lock-icon">⛔</div>
+        <h2>Доступ запрещён</h2>
+        <p class="sub">Твой аккаунт не входит в список администраторов.</p>
     </div>
 
     <!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
@@ -453,46 +343,37 @@
     <script>
         // ============================================================
         //  КОНФИГ
+        // Адрес твоего Cloudflare Worker (он проксирует на VPS).
         // ============================================================
         const API_URL = 'https://harf-pay.pablorikoyes.workers.dev';
-        const PASSWORD = '676767';
 
         let tg = null;
         let currentChatId = null;
-        let user_id = null;
+        let initData = '';
 
         try {
             tg = window.Telegram?.WebApp;
-            if (tg) {
-                tg.ready();
-                tg.expand();
-                user_id = tg.initDataUnsafe?.user?.id;
-            }
         } catch (e) {}
 
         // ============================================================
-        //  АВТОРИЗАЦИЯ
+        //  СТАРТ
+        //  Настоящая проверка личности идёт на сервере через initData —
+        //  никакого пароля в JS больше не нужно, его всё равно видно
+        //  через "просмотр кода страницы".
         // ============================================================
-        function login() {
-            const input = document.getElementById('password-input');
-            const error = document.getElementById('login-error');
-            const password = input.value.trim();
-
-            if (password === PASSWORD) {
-                error.textContent = '';
-                document.getElementById('password-screen').classList.add('hidden');
-                document.getElementById('main-screen').classList.remove('hidden');
-                loadChats();
-            } else {
-                error.textContent = '❌ Неверный пароль';
-                input.value = '';
-                input.focus();
+        function init() {
+            if (!tg || !tg.initData) {
+                document.getElementById('not-telegram-screen').classList.remove('hidden');
+                return;
             }
-        }
 
-        document.getElementById('password-input').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') login();
-        });
+            tg.ready();
+            tg.expand();
+            initData = tg.initData;
+
+            document.getElementById('main-screen').classList.remove('hidden');
+            loadChats();
+        }
 
         // ============================================================
         //  ЗАГРУЗКА ЧАТОВ
@@ -505,8 +386,15 @@
                 const response = await fetch(`${API_URL}/api/chats`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ user_id: user_id || 0 })
+                    body: JSON.stringify({ init_data: initData })
                 });
+
+                if (response.status === 403) {
+                    document.getElementById('main-screen').classList.add('hidden');
+                    document.getElementById('unauthorized-screen').classList.remove('hidden');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (!data.chats || data.chats.length === 0) {
@@ -558,8 +446,15 @@
                 const response = await fetch(`${API_URL}/api/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, user_id: user_id || 0 })
+                    body: JSON.stringify({ chat_id: chatId, init_data: initData })
                 });
+
+                if (response.status === 403) {
+                    document.getElementById('main-screen').classList.add('hidden');
+                    document.getElementById('unauthorized-screen').classList.remove('hidden');
+                    return;
+                }
+
                 const data = await response.json();
 
                 if (!data.messages || data.messages.length === 0) {
@@ -652,13 +547,7 @@
             loadChats();
         }
 
-        // ============================================================
-        //  TELEGRAM WEBAPP
-        // ============================================================
-        if (tg) {
-            tg.ready();
-            tg.expand();
-        }
+        init();
     </script>
 
 </body>
