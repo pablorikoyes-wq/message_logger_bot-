@@ -57,6 +57,11 @@
             transition: border 0.3s;
         }
 
+        /* ===== ВАЖНО: type="password" скрывает символы ===== */
+        .password-screen input[type="password"] {
+            -webkit-text-security: disc;
+        }
+
         .password-screen input:focus {
             border-color: #58a6ff;
             outline: none;
@@ -220,12 +225,10 @@
             background: #1c2333;
         }
 
-        /* --- Обычное сообщение --- */
         .message-item.normal {
             border-left-color: #238636;
         }
 
-        /* --- Удалённое сообщение --- */
         .message-item.deleted {
             border-left-color: #f85149;
             opacity: 0.7;
@@ -245,7 +248,6 @@
             margin-left: 10px;
         }
 
-        /* --- Отредактированное сообщение --- */
         .message-item.edited {
             border-left-color: #d29922;
         }
@@ -384,7 +386,6 @@
             .message-item { padding: 12px 14px; }
         }
 
-        /* Скрываем элементы */
         .hidden {
             display: none !important;
         }
@@ -426,7 +427,10 @@
         <div class="lock-icon">🔐</div>
         <h2>Введите пароль</h2>
         <p class="sub">Для доступа к перепискам</p>
-        <input type="password" id="password-input" placeholder="" maxlength="20" />
+
+        <!-- ===== ВАЖНО: type="password" — пароль скрыт! ===== -->
+        <input type="password" id="password-input" placeholder="Введите пароль" maxlength="20" />
+
         <button onclick="login()">Войти</button>
         <div id="login-error" class="error"></div>
     </div>
@@ -576,7 +580,6 @@
                     const time = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
                     const deletedTime = msg.deleted_at ? new Date(msg.deleted_at).toLocaleString('ru-RU') : '';
 
-                    // Контент
                     let content = msg.text_content || '(без текста)';
                     if (msg.content_type && msg.content_type !== 'text') {
                         const labels = {
@@ -591,7 +594,6 @@
                         content = labels[msg.content_type] || msg.content_type;
                     }
 
-                    // === УДАЛЁННОЕ ===
                     if (msg.is_deleted) {
                         classes += ' deleted';
                         statusBadge = `<span class="badge-status deleted-badge">🗑️ УДАЛЕНО</span>`;
@@ -603,7 +605,6 @@
                             </div>
                         `;
                     }
-                    // === ОТРЕДАКТИРОВАННОЕ ===
                     else if (msg.edited_at && msg.original_text) {
                         classes += ' edited';
                         statusBadge = `<span class="badge-status edited-badge">✏️ ОТРЕДАКТИРОВАНО</span>`;
@@ -619,7 +620,6 @@
                             </div>
                         `;
                     }
-                    // === ОБЫЧНОЕ ===
                     else {
                         classes += ' normal';
                         textHtml = `
