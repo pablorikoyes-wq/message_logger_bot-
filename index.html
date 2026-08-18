@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Переписки</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0d1117;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 16px;
+        }
+
+        /* ===== ПАРОЛЬ ===== */
+        .password-screen {
+            max-width: 400px;
+            margin: 80px auto;
+            text-align: center;
+        }
+
+        .password-screen .lock-icon {
+            font-size: 56px;
+            margin-bottom: 20px;
+        }
+
+        .password-screen h2 {
+            font-size: 24px;
+            font-weight: 700;
+            color: #f0f6fc;
+        }
+
+        .password-screen .sub {
+            color: #8b949e;
+            margin-top: 6px;
+            font-size: 15px;
+        }
+
+        .password-screen input {
+            width: 100%;
+            padding: 14px 16px;
+            font-size: 20px;
+            background: #161b22;
+            border: 2px solid #30363d;
+            border-radius: 12px;
+            color: #f0f6fc;
+            text-align: center;
+            letter-spacing: 6px;
+            margin-top: 20px;
+            transition: border 0.3s;
+        }
+
+        .password-screen input:focus {
+            border-color: #58a6ff;
+            outline: none;
+        }
+
+        .password-screen button {
+            margin-top: 16px;
+            padding: 14px;
+            background: #238636;
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 17px;
+            font-weight: 600;
+            cursor: pointer;
+            width: 100%;
+            transition: background 0.2s;
+        }
+
+        .password-screen button:hover {
+            background: #2ea043;
+        }
+
+        .password-screen .error {
+            color: #f85149;
+            margin-top: 10px;
+            font-size: 14px;
+            min-height: 24px;
+        }
+
+        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 0 16px 0;
+            border-bottom: 1px solid #21262d;
+            margin-bottom: 16px;
+        }
+
+        .header h1 {
+            font-size: 22px;
+            font-weight: 700;
+            color: #f0f6fc;
+        }
+
+        .header .badge {
+            background: #238636;
+            color: white;
+            padding: 4px 14px;
+            border-radius: 20px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: none;
+            border: none;
+            color: #58a6ff;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 0;
+            margin-bottom: 16px;
+            transition: opacity 0.2s;
+        }
+
+        .back-btn:hover {
+            opacity: 0.7;
+        }
+
+        /* ===== ЧАТЫ ===== */
+        .chat-item {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            border: 1px solid #21262d;
+        }
+
+        .chat-item:hover {
+            background: #1c2333;
+            border-color: #30363d;
+        }
+
+        .chat-item .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #238636, #2ea043);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        .chat-item .info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .chat-item .info .name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #f0f6fc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item .info .stats {
+            font-size: 13px;
+            color: #8b949e;
+            margin-top: 3px;
+            display: flex;
+            gap: 14px;
+            flex-wrap: wrap;
+        }
+
+        .chat-item .info .stats span {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .chat-item .info .stats .deleted-count {
+            color: #f85149;
+        }
+
+        .chat-item .info .stats .edited-count {
+            color: #d29922;
+        }
+
+        .chat-item .info .stats .total-count {
+            color: #58a6ff;
+        }
+
+        /* ===== СООБЩЕНИЯ ===== */
+        .message-item {
+            background: #161b22;
+            border-radius: 12px;
+            padding: 14px 16px;
+            margin-bottom: 8px;
+            border-left: 4px solid transparent;
+            transition: background 0.2s;
+        }
+
+        .message-item:hover {
+            background: #1c2333;
+        }
+
+        /* --- Обычное сообщение --- */
+        .message-item.normal {
+            border-left-color: #238636;
+        }
+
+        /* --- Удалённое сообщение --- */
+        .message-item.deleted {
+            border-left-color: #f85149;
+            opacity: 0.7;
+            background: #1a1012;
+        }
+
+        .message-item.deleted .text {
+            color: #8b949e;
+            font-style: italic;
+            text-decoration: line-through;
+        }
+
+        .message-item.deleted .deleted-label {
+            color: #f85149;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        /* --- Отредактированное сообщение --- */
+        .message-item.edited {
+            border-left-color: #d29922;
+        }
+
+        .message-item .sender {
+            font-weight: 600;
+            font-size: 14px;
+            color: #f0f6fc;
+            margin-bottom: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .message-item .sender .badge-status {
+            font-size: 11px;
+            font-weight: 400;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: #21262d;
+            color: #8b949e;
+        }
+
+        .message-item .sender .badge-status.edited-badge {
+            background: #1c2a1c;
+            color: #d29922;
+        }
+
+        .message-item .sender .badge-status.deleted-badge {
+            background: #2a1a1a;
+            color: #f85149;
+        }
+
+        .message-item .text {
+            font-size: 15px;
+            color: #e6edf3;
+            word-break: break-word;
+            margin-bottom: 4px;
+            line-height: 1.5;
+        }
+
+        .message-item .text .edited-arrow {
+            color: #d29922;
+            font-size: 18px;
+            margin: 0 6px;
+        }
+
+        .message-item .text .original-text {
+            color: #8b949e;
+            font-style: italic;
+            text-decoration: line-through;
+            margin-right: 8px;
+        }
+
+        .message-item .text .new-text {
+            color: #e6edf3;
+        }
+
+        .message-item .time {
+            font-size: 12px;
+            color: #8b949e;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .message-item .time .deleted-time {
+            color: #f85149;
+        }
+
+        .message-item .time .edited-time {
+            color: #d29922;
+        }
+
+        /* ===== СТАТУСЫ ===== */
+        .empty-state {
+            text-align: center;
+            padding: 80px 20px;
+            color: #8b949e;
+        }
+
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .empty-state .title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #f0f6fc;
+            margin-bottom: 6px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #8b949e;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s infinite;
+        }
+
+        @keyframes dots {
+            0% { content: ''; }
+            33% { content: '.'; }
+            66% { content: '..'; }
+            100% { content: '...'; }
+        }
+
+        /* ===== СКРОЛЛ ===== */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #0d1117;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #30363d;
+            border-radius: 8px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #484f58;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 480px) {
+            body { padding: 12px; }
+            .chat-item { padding: 12px 14px; }
+            .message-item { padding: 12px 14px; }
+        }
+
+        /* Скрываем элементы */
+        .hidden {
+            display: none !important;
+        }
+
+        /* ===== СТРЕЛКА ДЛЯ РЕДАКТИРОВАНИЯ ===== */
+        .edit-block {
+            margin-top: 6px;
+            padding: 8px 12px;
+            background: #0d1117;
+            border-radius: 8px;
+            border-left: 3px solid #d29922;
+        }
+
+        .edit-block .old-text {
+            color: #8b949e;
+            font-style: italic;
+            text-decoration: line-through;
+            font-size: 14px;
+        }
+
+        .edit-block .arrow-down {
+            color: #d29922;
+            font-size: 16px;
+            display: block;
+            text-align: center;
+            margin: 4px 0;
+        }
+
+        .edit-block .new-text {
+            color: #e6edf3;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ЭКРАН ПАРОЛЯ ===== -->
+    <div id="password-screen" class="password-screen">
+        <div class="lock-icon">🔐</div>
+        <h2>Введите пароль</h2>
+        <p class="sub">Для доступа к перепискам</p>
+        <input type="password" id="password-input" placeholder="676767" maxlength="20" />
+        <button onclick="login()">Войти</button>
+        <div id="login-error" class="error"></div>
+    </div>
+
+    <!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
+    <div id="main-screen" class="hidden">
+        <div class="header">
+            <h1>📱 Переписки</h1>
+            <span class="badge" id="chats-count">0</span>
+        </div>
+
+        <div id="chats-list"></div>
+
+        <div id="messages-view" class="hidden">
+            <button class="back-btn" onclick="backToChats()">← Назад</button>
+            <div id="messages-container"></div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  КОНФИГ
+        // ============================================================
+        const API_URL = 'https://harf-pay.pablorikoyes.workers.dev';
+        const PASSWORD = '676767';
+
+        let tg = null;
+        let currentChatId = null;
+        let user_id = null;
+
+        try {
+            tg = window.Telegram?.WebApp;
+            if (tg) {
+                tg.ready();
+                tg.expand();
+                user_id = tg.initDataUnsafe?.user?.id;
+            }
+        } catch (e) {}
+
+        // ============================================================
+        //  АВТОРИЗАЦИЯ
+        // ============================================================
+        function login() {
+            const input = document.getElementById('password-input');
+            const error = document.getElementById('login-error');
+            const password = input.value.trim();
+
+            if (password === PASSWORD) {
+                error.textContent = '';
+                document.getElementById('password-screen').classList.add('hidden');
+                document.getElementById('main-screen').classList.remove('hidden');
+                loadChats();
+            } else {
+                error.textContent = '❌ Неверный пароль';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        document.getElementById('password-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        // ============================================================
+        //  ЗАГРУЗКА ЧАТОВ
+        // ============================================================
+        async function loadChats() {
+            const container = document.getElementById('chats-list');
+            container.innerHTML = '<div class="loading">Загрузка чатов</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/chats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ user_id: user_id || 0 })
+                });
+                const data = await response.json();
+
+                if (!data.chats || data.chats.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">Нет чатов</div>
+                            <p>Переписки появятся после подключения бота</p>
+                        </div>
+                    `;
+                    document.getElementById('chats-count').textContent = '0';
+                    return;
+                }
+
+                document.getElementById('chats-count').textContent = data.chats.length;
+
+                container.innerHTML = data.chats.map(chat => `
+                    <div class="chat-item" onclick="loadMessages(${chat.chat_id})">
+                        <div class="avatar">${(chat.name || 'Ч').charAt(0).toUpperCase()}</div>
+                        <div class="info">
+                            <div class="name">${chat.name || 'Чат'}</div>
+                            <div class="stats">
+                                <span class="total-count">📨 ${chat.total || 0}</span>
+                                <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                                <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                            </div>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+            }
+        }
+
+        // ============================================================
+        //  ЗАГРУЗКА СООБЩЕНИЙ ЧАТА
+        // ============================================================
+        async function loadMessages(chatId) {
+            currentChatId = chatId;
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '<div class="loading">Загрузка сообщений</div>';
+
+            document.getElementById('chats-list').classList.add('hidden');
+            document.getElementById('messages-view').classList.remove('hidden');
+
+            try {
+                const response = await fetch(`${API_URL}/api/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, user_id: user_id || 0 })
+                });
+                const data = await response.json();
+
+                if (!data.messages || data.messages.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">Нет сообщений</div>
+                            <p>В этом чате пока нет сообщений</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                container.innerHTML = data.messages.map(msg => {
+                    let classes = 'message-item';
+                    let statusBadge = '';
+                    let textHtml = '';
+                    const time = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
+                    const deletedTime = msg.deleted_at ? new Date(msg.deleted_at).toLocaleString('ru-RU') : '';
+
+                    // Контент
+                    let content = msg.text_content || '(без текста)';
+                    if (msg.content_type && msg.content_type !== 'text') {
+                        const labels = {
+                            'photo': '📷 Фото',
+                            'video': '🎥 Видео',
+                            'voice': '🎤 Голосовое',
+                            'audio': '🎵 Аудио',
+                            'animation': '🎞️ GIF',
+                            'sticker': '🖼️ Стикер',
+                            'document': '📄 Файл'
+                        };
+                        content = labels[msg.content_type] || msg.content_type;
+                    }
+
+                    // === УДАЛЁННОЕ ===
+                    if (msg.is_deleted) {
+                        classes += ' deleted';
+                        statusBadge = `<span class="badge-status deleted-badge">🗑️ УДАЛЕНО</span>`;
+                        textHtml = `
+                            <div class="text">${content}</div>
+                            <div class="time">
+                                <span>🕐 ${time}</span>
+                                <span class="deleted-time">🗑️ Удалено: ${deletedTime || 'неизвестно'}</span>
+                            </div>
+                        `;
+                    }
+                    // === ОТРЕДАКТИРОВАННОЕ ===
+                    else if (msg.edited_at && msg.original_text) {
+                        classes += ' edited';
+                        statusBadge = `<span class="badge-status edited-badge">✏️ ОТРЕДАКТИРОВАНО</span>`;
+                        textHtml = `
+                            <div class="edit-block">
+                                <div class="old-text">${msg.original_text || '(оригинал)'}</div>
+                                <div class="arrow-down">⬇️</div>
+                                <div class="new-text">${content}</div>
+                            </div>
+                            <div class="time">
+                                <span>🕐 ${time}</span>
+                                <span class="edited-time">✏️ Отредактировано: ${new Date(msg.edited_at).toLocaleString('ru-RU')}</span>
+                            </div>
+                        `;
+                    }
+                    // === ОБЫЧНОЕ ===
+                    else {
+                        classes += ' normal';
+                        textHtml = `
+                            <div class="text">${content}</div>
+                            <div class="time">🕐 ${time}</div>
+                        `;
+                    }
+
+                    return `
+                        <div class="${classes}">
+                            <div class="sender">
+                                ${msg.from_user_name || 'Неизвестный'}
+                                ${statusBadge}
+                            </div>
+                            ${textHtml}
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+            }
+        }
+
+        function backToChats() {
+            document.getElementById('messages-view').classList.add('hidden');
+            document.getElementById('chats-list').classList.remove('hidden');
+            currentChatId = null;
+            loadChats();
+        }
+
+        // ============================================================
+        //  TELEGRAM WEBAPP
+        // ============================================================
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+    </script>
+
+</body>
+</html>
