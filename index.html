@@ -1178,10 +1178,8 @@
                 let timeHtml = timeStr;
 
                 if (isDeleted && msg.deleted_at) {
-                    const whoDeleted = msg.deleted_by || 'Кем-то';
-                    timeHtml += ` | 🗑️ <span class="deleted-time">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
-                    timeHtml += ` <span class="deleted-by">(${whoDeleted})</span>`;
-                }
+    timeHtml += ` | 🗑️ <span class="deleted-time">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
+}
 
                 timeEl.innerHTML = timeHtml;
 
