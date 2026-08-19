@@ -22,9 +22,7 @@
             overflow: hidden;
         }
 
-        .hidden {
-            display: none !important;
-        }
+        .hidden { display: none !important; }
 
         /* ===== ПАРОЛЬ ===== */
         .password-screen {
@@ -64,6 +62,7 @@
             font-weight: 600;
             cursor: pointer;
             width: 100%;
+            transition: background 0.2s;
         }
 
         .password-screen button:hover { background: #4752c4; }
@@ -89,7 +88,12 @@
             flex-shrink: 0;
         }
 
-        .header h1 { font-size: 18px; font-weight: 700; color: #f0f6fc; }
+        .header h1 {
+            font-size: 18px;
+            font-weight: 700;
+            color: #f0f6fc;
+        }
+
         .header .badge {
             background: #5865f2;
             color: white;
@@ -112,6 +116,7 @@
             font-size: 20px;
             cursor: pointer;
             padding: 4px;
+            transition: color 0.2s;
         }
 
         .header .header-actions button:hover { color: #f0f6fc; }
@@ -152,6 +157,8 @@
 
         .chat-item:hover { background: #161b22; }
         .chat-item.selected { background: #1a1a3e; }
+        .chat-item.pinned { border-left: 3px solid #5865f2; }
+        .chat-item.archived { opacity: 0.5; }
 
         .chat-item .avatar {
             width: 48px;
@@ -206,6 +213,11 @@
         .chat-item .stats-badge .deleted-count { color: #f85149; }
         .chat-item .stats-badge .edited-count { color: #d29922; }
 
+        .chat-item .status-icon {
+            font-size: 16px;
+            margin-left: 4px;
+        }
+
         .chat-item .checkbox {
             width: 22px;
             height: 22px;
@@ -257,6 +269,7 @@
 
         .context-menu .menu-item:hover { background: #1c2333; }
         .context-menu .menu-item.danger { color: #f85149; }
+        .context-menu .menu-item.disabled { color: #8b949e; cursor: not-allowed; }
 
         /* ===== СООБЩЕНИЯ ===== */
         .messages-container {
@@ -317,10 +330,12 @@
         }
 
         .msg-wrapper.deleted .msg-bubble {
-            opacity: 0.5;
+            opacity: 0.6;
             background: #1a1012 !important;
             color: #8b949e !important;
-            border: 1px solid #2a1a1a;
+        }
+
+        .msg-wrapper.deleted .msg-bubble .msg-text {
             text-decoration: line-through;
         }
 
@@ -346,6 +361,7 @@
             color: #8b949e;
             text-decoration: line-through;
             font-style: italic;
+            font-size: 13px;
         }
 
         .msg-wrapper.edited .edit-block .arrow-down {
@@ -355,7 +371,10 @@
             margin: 2px 0;
         }
 
-        .msg-wrapper.edited .edit-block .new-text { color: #e6edf3; }
+        .msg-wrapper.edited .edit-block .new-text {
+            color: #e6edf3;
+            font-size: 14px;
+        }
 
         .msg-time {
             font-size: 10px;
@@ -366,7 +385,16 @@
 
         .msg-wrapper.outgoing .msg-time { text-align: right; }
         .msg-wrapper.incoming .msg-time { text-align: left; }
-        .msg-wrapper.deleted .msg-time .deleted-time { color: #f85149; }
+
+        .msg-wrapper.deleted .msg-time .deleted-time {
+            color: #f85149;
+            font-weight: 500;
+        }
+
+        .msg-wrapper.deleted .msg-time .deleted-by {
+            color: #f85149;
+            font-style: italic;
+        }
 
         /* ===== ПОИСК ===== */
         .search-container {
@@ -423,11 +451,23 @@
             color: #8b949e;
             cursor: pointer;
             font-size: 14px;
+            padding: 4px 8px;
         }
 
         .trash-mode-banner button:hover { color: #f0f6fc; }
 
-        /* ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ===== */
+        .trash-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .trash-actions .btn-clear {
+            color: #f85149 !important;
+        }
+
+        .trash-actions .btn-clear:hover { color: #ff6b6b !important; }
+
+        /* ===== МОДАЛКА ===== */
         .modal-overlay {
             position: fixed;
             inset: 0;
@@ -437,6 +477,7 @@
             justify-content: center;
             z-index: 2000;
             padding: 20px;
+            backdrop-filter: blur(4px);
         }
 
         .modal-overlay.active { display: flex; }
@@ -451,7 +492,7 @@
         }
 
         .modal h3 { color: #f0f6fc; font-size: 18px; margin-bottom: 8px; }
-        .modal p { color: #8b949e; font-size: 14px; margin-bottom: 16px; }
+        .modal p { color: #8b949e; font-size: 14px; margin-bottom: 16px; line-height: 1.5; }
         .modal .modal-actions {
             display: flex;
             gap: 10px;
@@ -465,12 +506,15 @@
             font-size: 14px;
             font-weight: 600;
             cursor: pointer;
+            transition: background 0.2s;
         }
 
         .modal .modal-actions .btn-cancel {
             background: #21262d;
             color: #f0f6fc;
         }
+
+        .modal .modal-actions .btn-cancel:hover { background: #30363d; }
 
         .modal .modal-actions .btn-danger {
             background: #f85149;
@@ -529,7 +573,7 @@
         <p class="sub">Твой аккаунт не входит в список администраторов</p>
     </div>
 
-    <!-- ===== МОДАЛКА ПОДТВЕРЖДЕНИЯ ===== -->
+    <!-- ===== МОДАЛКА ===== -->
     <div id="confirm-modal" class="modal-overlay">
         <div class="modal">
             <h3 id="modal-title">Подтверждение</h3>
@@ -566,8 +610,8 @@
         <!-- Корзина -->
         <div id="trash-banner" class="trash-mode-banner hidden">
             <span>🗑️ Режим корзины</span>
-            <div>
-                <button onclick="clearTrash()">🧹 Очистить</button>
+            <div class="trash-actions">
+                <button class="btn-clear" onclick="clearTrash()">🧹 Очистить</button>
                 <button onclick="toggleTrashMode()">✕</button>
             </div>
         </div>
@@ -606,6 +650,8 @@
         let contextChatId = null;
         let modalCallback = null;
         let dontAskAgain = false;
+        let pinnedChats = new Set();
+        let archivedChats = new Set();
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
 
@@ -685,6 +731,9 @@
                 allChats = data.chats;
                 document.getElementById('chats-count').textContent = allChats.length;
 
+                // Загружаем сохранённые состояния
+                loadChatStates();
+
                 renderChats(allChats);
 
             } catch (e) {
@@ -693,15 +742,47 @@
             }
         }
 
+        function loadChatStates() {
+            try {
+                const saved = localStorage.getItem('chat_states');
+                if (saved) {
+                    const states = JSON.parse(saved);
+                    pinnedChats = new Set(states.pinned || []);
+                    archivedChats = new Set(states.archived || []);
+                }
+            } catch (e) {}
+        }
+
+        function saveChatStates() {
+            try {
+                localStorage.setItem('chat_states', JSON.stringify({
+                    pinned: Array.from(pinnedChats),
+                    archived: Array.from(archivedChats)
+                }));
+            } catch (e) {}
+        }
+
         function renderChats(chats) {
             const container = document.getElementById('chats-list');
 
-            container.innerHTML = chats.map(chat => {
+            // Сортируем: сначала закреплённые
+            const sorted = [...chats].sort((a, b) => {
+                const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
+                const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
+                return bPinned - aPinned;
+            });
+
+            container.innerHTML = sorted.map(chat => {
                 const isSelected = selectedChats.has(chat.chat_id);
-                const isInTrash = chat.in_trash || false;
+                const isPinned = pinnedChats.has(chat.chat_id);
+                const isArchived = archivedChats.has(chat.chat_id);
+
+                let statusIcon = '';
+                if (isPinned) statusIcon = '📌';
+                if (isArchived) statusIcon = '📦';
 
                 return `
-                    <div class="chat-item ${isSelected ? 'selected' : ''}" 
+                    <div class="chat-item ${isSelected ? 'selected' : ''} ${isPinned ? 'pinned' : ''} ${isArchived ? 'archived' : ''}" 
                          data-chat-id="${chat.chat_id}"
                          onclick="${trashMode ? `toggleSelectChat(${chat.chat_id})` : `loadMessages(${chat.chat_id}, '${chat.name}')`}"
                          oncontextmenu="${trashMode ? '' : `event.preventDefault(); showContextMenu(event, ${chat.chat_id});`}">
@@ -710,7 +791,7 @@
                         ` : ''}
                         <div class="avatar">${(chat.name || 'Ч').charAt(0).toUpperCase()}</div>
                         <div class="info">
-                            <div class="name">${chat.name || 'Чат'}</div>
+                            <div class="name">${chat.name || 'Чат'} ${statusIcon}</div>
                             <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
                             <div class="stats-badge">
                                 <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
@@ -782,6 +863,22 @@
             event.preventDefault();
             contextChatId = chatId;
             const menu = document.getElementById('context-menu');
+            const isArchived = archivedChats.has(chatId);
+            const isPinned = pinnedChats.has(chatId);
+
+            // Обновляем пункты меню
+            const items = menu.querySelectorAll('.menu-item');
+            items.forEach(item => {
+                if (item.textContent.includes('Архивировать')) {
+                    item.textContent = isArchived ? '📦 Уже в архиве' : '📦 Архивировать';
+                    item.className = `menu-item${isArchived ? ' disabled' : ''}`;
+                }
+                if (item.textContent.includes('Закрепить')) {
+                    item.textContent = isPinned ? '📌 Закреплён' : '📌 Закрепить';
+                    item.className = `menu-item${isPinned ? ' disabled' : ''}`;
+                }
+            });
+
             menu.style.display = 'block';
             menu.style.left = Math.min(event.clientX, window.innerWidth - 220) + 'px';
             menu.style.top = Math.min(event.clientY, window.innerHeight - 180) + 'px';
@@ -792,18 +889,36 @@
         });
 
         function archiveChat() {
-            alert('📦 Чат архивирован!');
+            const chatId = contextChatId;
+            if (archivedChats.has(chatId)) {
+                showModal('Уже в архиве', 'Этот чат уже заархивирован');
+                document.getElementById('context-menu').style.display = 'none';
+                return;
+            }
+            archivedChats.add(chatId);
+            saveChatStates();
             document.getElementById('context-menu').style.display = 'none';
+            renderChats(allChats);
+            showModal('✅ Готово!', 'Чат заархивирован');
         }
 
         function pinChat() {
-            alert('📌 Чат закреплён!');
+            const chatId = contextChatId;
+            if (pinnedChats.has(chatId)) {
+                showModal('Уже закреплён', 'Этот чат уже закреплён');
+                document.getElementById('context-menu').style.display = 'none';
+                return;
+            }
+            pinnedChats.add(chatId);
+            saveChatStates();
             document.getElementById('context-menu').style.display = 'none';
+            renderChats(allChats);
+            showModal('✅ Готово!', 'Чат закреплён');
         }
 
         function muteChat() {
-            alert('🔕 Уведомления выключены!');
             document.getElementById('context-menu').style.display = 'none';
+            showModal('🔕 Готово!', 'Уведомления выключены для этого чата');
         }
 
         function deleteChat() {
@@ -827,7 +942,7 @@
             document.getElementById('modal-text').textContent = text;
             document.getElementById('modal-checkbox-row').style.display = 'flex';
             document.getElementById('modal-dont-ask').checked = false;
-            modalCallback = onConfirm;
+            modalCallback = onConfirm || null;
             document.getElementById('confirm-modal').classList.add('active');
         }
 
@@ -902,14 +1017,6 @@
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
 
-            let myId = null;
-            for (const msg of messages) {
-                if (msg.from_user_name && msg.from_user_name.includes('⁠⁠⁠⁠')) {
-                    myId = msg.from_user_name;
-                    break;
-                }
-            }
-
             let lastSender = null;
             let msgGroup = [];
 
@@ -981,6 +1088,13 @@
                     content = labels[msg.content_type] || msg.content_type;
                 }
 
+                // Текст сообщения с обёрткой
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+
+                // Если удалено — иконка корзины
                 if (isDeleted) {
                     const deleteIcon = document.createElement('span');
                     deleteIcon.className = 'delete-icon';
@@ -988,25 +1102,23 @@
                     bubble.appendChild(deleteIcon);
                 }
 
-                const textSpan = document.createElement('span');
-                textSpan.textContent = content;
-                bubble.appendChild(textSpan);
-
                 const timeEl = document.createElement('div');
                 timeEl.className = 'msg-time';
                 const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
-                timeEl.textContent = timeStr;
+                let timeHtml = timeStr;
 
                 if (isDeleted && msg.deleted_at) {
-                    const delTime = document.createElement('span');
-                    delTime.className = 'deleted-time';
-                    delTime.textContent = ` | 🗑️ ${new Date(msg.deleted_at).toLocaleString('ru-RU')}`;
-                    timeEl.appendChild(delTime);
+                    const whoDeleted = msg.deleted_by || 'Кем-то';
+                    timeHtml += ` | 🗑️ <span class="deleted-time">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
+                    timeHtml += ` <span class="deleted-by">(${whoDeleted})</span>`;
                 }
+
+                timeEl.innerHTML = timeHtml;
 
                 wrapper.appendChild(bubble);
                 wrapper.appendChild(timeEl);
 
+                // Отредактированное сообщение
                 if (isEdited && msg.original_text) {
                     const editBlock = document.createElement('div');
                     editBlock.className = 'edit-block';
@@ -1065,6 +1177,9 @@
             loadChats();
         }
 
+        // ============================================================
+        //  ЗАПУСК
+        // ============================================================
         if (tg) {
             tg.ready();
             tg.expand();
