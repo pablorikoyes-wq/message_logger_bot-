@@ -20,7 +20,6 @@
             padding: 0;
             margin: 0;
             overflow: hidden;
-            font-size: 14px;
         }
 
         .hidden { display: none !important; }
@@ -146,7 +145,7 @@
         .chat-item {
             display: flex;
             align-items: center;
-            padding: 14px 18px;
+            padding: 16px 18px;
             cursor: pointer;
             transition: background 0.15s;
             border-bottom: 1px solid #161b22;
@@ -154,7 +153,7 @@
             position: relative;
             user-select: none;
             -webkit-user-select: none;
-            min-height: 68px;
+            min-height: 72px;
         }
 
         .chat-item:hover { background: #161b22; }
@@ -163,8 +162,8 @@
         .chat-item.archived { opacity: 0.5; }
 
         .chat-item .avatar {
-            width: 52px;
-            height: 52px;
+            width: 54px;
+            height: 54px;
             border-radius: 50%;
             background: linear-gradient(135deg, #5865f2, #4752c4);
             display: flex;
@@ -272,7 +271,7 @@
         .context-menu .menu-item.danger { color: #f85149; }
         .context-menu .menu-item.disabled { color: #8b949e; cursor: not-allowed; }
 
-        /* ===== СООБЩЕНИЯ (МАЛЕНЬКИЕ) ===== */
+        /* ===== СООБЩЕНИЯ (ЧУТЬ БОЛЬШЕ) ===== */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -298,19 +297,19 @@
         }
 
         .msg-wrapper .sender-name {
-            font-size: 9px;
+            font-size: 10px;
             color: #8b949e;
             margin-bottom: 0px;
             padding-left: 8px;
         }
 
         .msg-bubble {
-            padding: 4px 8px;
+            padding: 4px 10px;
             border-radius: 8px;
             max-width: 85%;
             word-wrap: break-word;
             position: relative;
-            font-size: 11px;
+            font-size: 12px;
             line-height: 1.3;
         }
 
@@ -361,7 +360,7 @@
             color: #8b949e;
             text-decoration: line-through;
             font-style: italic;
-            font-size: 9px;
+            font-size: 10px;
         }
 
         .msg-wrapper.edited .edit-block .arrow-down {
@@ -373,11 +372,11 @@
 
         .msg-wrapper.edited .edit-block .new-text {
             color: #e6edf3;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .msg-time {
-            font-size: 8px;
+            font-size: 9px;
             color: #8b949e;
             margin-top: 0px;
             padding: 0 3px;
@@ -533,22 +532,21 @@
             cursor: pointer;
         }
 
-        /* ===== АДАПТИВ ДЛЯ ТЕЛЕФОНОВ ===== */
         @media (max-width: 480px) {
             .msg-bubble {
                 max-width: 92%;
-                font-size: 10px;
-                padding: 3px 6px;
+                font-size: 11px;
+                padding: 3px 8px;
             }
 
             .chat-item {
-                padding: 12px 14px;
-                min-height: 58px;
+                padding: 14px 16px;
+                min-height: 64px;
             }
 
             .chat-item .avatar {
-                width: 44px;
-                height: 44px;
+                width: 46px;
+                height: 46px;
                 font-size: 17px;
             }
 
@@ -564,15 +562,15 @@
             .header { padding: 8px 12px; min-height: 42px; }
             .header h1 { font-size: 14px; }
             .messages-container { padding: 4px 6px; }
-            .msg-wrapper .sender-name { font-size: 8px; }
-            .msg-time { font-size: 7px; }
+            .msg-wrapper .sender-name { font-size: 9px; }
+            .msg-time { font-size: 8px; }
         }
 
         @media (max-width: 380px) {
-            .msg-bubble { font-size: 9px; padding: 2px 5px; }
-            .chat-item { padding: 10px 12px; min-height: 50px; }
-            .chat-item .avatar { width: 38px; height: 38px; font-size: 14px; }
-            .chat-item .info .name { font-size: 13px; }
+            .msg-bubble { font-size: 10px; padding: 2px 6px; }
+            .chat-item { padding: 12px 14px; min-height: 56px; }
+            .chat-item .avatar { width: 40px; height: 40px; font-size: 15px; }
+            .chat-item .info .name { font-size: 14px; }
             .chat-item .info .last-msg { font-size: 11px; }
         }
     </style>
