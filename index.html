@@ -271,14 +271,14 @@
         .context-menu .menu-item.danger { color: #f85149; }
         .context-menu .menu-item.disabled { color: #8b949e; cursor: not-allowed; }
 
-        /* ===== СООБЩЕНИЯ ===== */
+        /* ===== СООБЩЕНИЯ (УВЕЛИЧЕННЫЕ) ===== */
         .messages-container {
             flex: 1;
             overflow-y: auto;
-            padding: 4px 8px;
+            padding: 6px 10px;
             display: flex;
             flex-direction: column;
-            gap: 1px;
+            gap: 2px;
             background: #0d1117;
         }
 
@@ -297,20 +297,20 @@
         }
 
         .msg-wrapper .sender-name {
-            font-size: 10px;
+            font-size: 11px;
             color: #8b949e;
-            margin-bottom: 0px;
-            padding-left: 8px;
+            margin-bottom: 1px;
+            padding-left: 10px;
         }
 
         .msg-bubble {
-            padding: 4px 10px;
-            border-radius: 8px;
+            padding: 6px 12px;
+            border-radius: 10px;
             max-width: 85%;
             word-wrap: break-word;
             position: relative;
-            font-size: 12px;
-            line-height: 1.3;
+            font-size: 14px;
+            line-height: 1.4;
         }
 
         .msg-wrapper.outgoing { align-self: flex-end; }
@@ -353,6 +353,8 @@
             display: flex;
             flex-direction: column;
             align-items: flex-start;
+            font-size: 14px;
+            padding: 6px 12px;
         }
 
         .msg-wrapper.deleted.outgoing .msg-bubble {
@@ -367,7 +369,7 @@
 
         .msg-wrapper.deleted .delete-icon {
             margin-left: 4px;
-            font-size: 11px;
+            font-size: 13px;
             color: #ff6b6b;
         }
 
@@ -376,7 +378,7 @@
             flex-direction: column;
             align-items: flex-start;
             gap: 2px;
-            font-size: 9px;
+            font-size: 10px;
             color: #8b949e;
             margin-top: 2px;
             padding: 0 4px;
@@ -398,12 +400,12 @@
 
         /* ===== ОТРЕДАКТИРОВАННЫЕ ===== */
         .msg-wrapper.edited .edit-block {
-            margin-top: 2px;
-            padding: 3px 6px;
+            margin-top: 3px;
+            padding: 4px 8px;
             background: #161b22;
-            border-radius: 5px;
+            border-radius: 6px;
             border-left: 2px solid #d29922;
-            font-size: 10px;
+            font-size: 12px;
             max-width: 85%;
         }
 
@@ -411,20 +413,30 @@
             color: #8b949e;
             text-decoration: line-through;
             font-style: italic;
-            font-size: 10px;
+            font-size: 12px;
         }
 
         .msg-wrapper.edited .edit-block .arrow-down {
             color: #d29922;
-            font-size: 10px;
+            font-size: 12px;
             text-align: center;
             margin: 1px 0;
         }
 
         .msg-wrapper.edited .edit-block .new-text {
             color: #e6edf3;
-            font-size: 11px;
+            font-size: 13px;
         }
+
+        .msg-time {
+            font-size: 10px;
+            color: #8b949e;
+            margin-top: 1px;
+            padding: 0 4px;
+        }
+
+        .msg-wrapper.outgoing .msg-time { text-align: right; }
+        .msg-wrapper.incoming .msg-time { text-align: left; }
 
         /* ===== ПОИСК ===== */
         .search-container {
@@ -566,8 +578,13 @@
         @media (max-width: 480px) {
             .msg-bubble {
                 max-width: 92%;
-                font-size: 11px;
-                padding: 3px 8px;
+                font-size: 13px;
+                padding: 5px 10px;
+            }
+
+            .msg-wrapper.deleted .msg-bubble {
+                font-size: 13px;
+                padding: 5px 10px;
             }
 
             .chat-item {
@@ -592,13 +609,14 @@
             .modal { margin: 0 8px; padding: 12px; }
             .header { padding: 8px 12px; min-height: 42px; }
             .header h1 { font-size: 14px; }
-            .messages-container { padding: 4px 6px; }
-            .msg-wrapper .sender-name { font-size: 9px; }
-            .msg-time { font-size: 8px; }
+            .messages-container { padding: 4px 8px; }
+            .msg-wrapper .sender-name { font-size: 10px; }
+            .msg-time { font-size: 9px; }
         }
 
         @media (max-width: 380px) {
-            .msg-bubble { font-size: 10px; padding: 2px 6px; }
+            .msg-bubble { font-size: 12px; padding: 4px 8px; }
+            .msg-wrapper.deleted .msg-bubble { font-size: 12px; padding: 4px 8px; }
             .chat-item { padding: 12px 14px; min-height: 56px; }
             .chat-item .avatar { width: 40px; height: 40px; font-size: 15px; }
             .chat-item .info .name { font-size: 14px; }
