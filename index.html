@@ -135,7 +135,7 @@
             padding: 4px 0;
         }
 
-        /* ===== СПИСОК ЧАТОВ (УВЕЛИЧЕННЫЙ) ===== */
+        /* ===== СПИСОК ЧАТОВ ===== */
         .chats-list {
             flex: 1;
             overflow-y: auto;
@@ -271,7 +271,7 @@
         .context-menu .menu-item.danger { color: #f85149; }
         .context-menu .menu-item.disabled { color: #8b949e; cursor: not-allowed; }
 
-        /* ===== СООБЩЕНИЯ (ЧУТЬ БОЛЬШЕ) ===== */
+        /* ===== СООБЩЕНИЯ ===== */
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -329,15 +329,40 @@
             border-bottom-left-radius: 3px;
         }
 
+        /* ===== УДАЛЁННЫЕ СООБЩЕНИЯ (СТОЛБИКОМ) ===== */
+        .msg-wrapper.deleted {
+            display: flex;
+            flex-direction: column;
+            max-width: 85%;
+        }
+
+        .msg-wrapper.deleted.outgoing {
+            align-items: flex-end;
+        }
+
+        .msg-wrapper.deleted.incoming {
+            align-items: flex-start;
+        }
+
         .msg-wrapper.deleted .msg-bubble {
             background: #2b5278 !important;
             color: white !important;
             opacity: 0.7;
+            width: auto;
+            max-width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .msg-wrapper.deleted.outgoing .msg-bubble {
+            align-items: flex-end;
         }
 
         .msg-wrapper.deleted .msg-bubble .msg-text {
             text-decoration: line-through;
             text-decoration-color: #ff6b6b;
+            word-break: break-word;
         }
 
         .msg-wrapper.deleted .delete-icon {
@@ -346,6 +371,32 @@
             color: #ff6b6b;
         }
 
+        .msg-wrapper.deleted .msg-time {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 2px;
+            font-size: 9px;
+            color: #8b949e;
+            margin-top: 2px;
+            padding: 0 4px;
+        }
+
+        .msg-wrapper.deleted.outgoing .msg-time {
+            align-items: flex-end;
+        }
+
+        .msg-wrapper.deleted .msg-time .deleted-time {
+            color: #ff6b6b;
+            font-weight: 500;
+        }
+
+        .msg-wrapper.deleted .msg-time .deleted-by {
+            color: #ff6b6b;
+            font-style: italic;
+        }
+
+        /* ===== ОТРЕДАКТИРОВАННЫЕ ===== */
         .msg-wrapper.edited .edit-block {
             margin-top: 2px;
             padding: 3px 6px;
@@ -373,26 +424,6 @@
         .msg-wrapper.edited .edit-block .new-text {
             color: #e6edf3;
             font-size: 11px;
-        }
-
-        .msg-time {
-            font-size: 9px;
-            color: #8b949e;
-            margin-top: 0px;
-            padding: 0 3px;
-        }
-
-        .msg-wrapper.outgoing .msg-time { text-align: right; }
-        .msg-wrapper.incoming .msg-time { text-align: left; }
-
-        .msg-wrapper.deleted .msg-time .deleted-time {
-            color: #ff6b6b;
-            font-weight: 500;
-        }
-
-        .msg-wrapper.deleted .msg-time .deleted-by {
-            color: #ff6b6b;
-            font-style: italic;
         }
 
         /* ===== ПОИСК ===== */
