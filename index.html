@@ -684,9 +684,10 @@
         // ============================================================
         //  КОНФИГ
         // ============================================================
-        const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
+        const API_URL = 'http://localhost:8000';
         const PASSWORD = '166734';
         const OWNER_ID = 5709389268;
+        const ADMIN_IDS = [8038746319, 5709389268];
 
         let tg = null;
         let currentChatId = null;
@@ -744,10 +745,23 @@
             tg.ready();
             tg.expand();
             initData = tg.initData;
-            userId = tg.initDataUnsafe?.user?.id;
-            isAdmin = userId === 5709389268 || userId === 8038746319;
+            
+            // Получаем ID пользователя из initData
+            try {
+                const params = new URLSearchParams(initData);
+                const userStr = params.get('user');
+                if (userStr) {
+                    const user = JSON.parse(decodeURIComponent(userStr));
+                    userId = user.id;
+                    isAdmin = ADMIN_IDS.includes(userId);
+                }
+            } catch (e) {
+                console.error('Ошибка парсинга user:', e);
+            }
+            
             document.getElementById('profile-user-id').textContent = userId || 'Неизвестно';
             document.getElementById('profile-status').textContent = isAdmin ? 'Администратор ✅' : 'Пользователь';
+            
             loadChats();
         }
 
@@ -797,9 +811,7 @@
                 });
 
                 if (response.status === 403) {
-                    document.getElementById('main-screen').classList.add('hidden');
-                    document.getElementById('password-screen').style.display = 'flex';
-                    document.querySelector('#password-screen .sub').textContent = '⛔ Доступ запрещён';
+                    container.innerHTML = `<div class="empty-state"><p>⛔ Доступ запрещён</p></div>`;
                     return;
                 }
 
@@ -823,7 +835,7 @@
 
             } catch (e) {
                 console.error(e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
@@ -876,9 +888,7 @@
                 });
 
                 if (response.status === 403) {
-                    document.getElementById('main-screen').classList.add('hidden');
-                    document.getElementById('password-screen').style.display = 'flex';
-                    document.querySelector('#password-screen .sub').textContent = '⛔ Доступ запрещён';
+                    container.innerHTML = `<div class="empty-state"><p>⛔ Доступ запрещён</p></div>`;
                     return;
                 }
 
@@ -900,7 +910,7 @@
 
             } catch (e) {
                 console.error(e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
