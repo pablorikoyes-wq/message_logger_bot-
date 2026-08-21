@@ -114,6 +114,104 @@
         .header .header-actions button:hover { color: #f0f6fc; }
         .back-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: #5865f2; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 0; }
 
+        /* FILTERS */
+        .filters {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(22, 27, 34, 0.6);
+            border-bottom: 1px solid rgba(33, 38, 45, 0.3);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+        .filter-btn {
+            padding: 4px 14px;
+            border-radius: 16px;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            background: transparent;
+            color: #8b949e;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+        .filter-btn.active {
+            background: rgba(88, 101, 242, 0.2);
+            border-color: #5865f2;
+            color: #5865f2;
+        }
+        .filter-btn:hover {
+            background: rgba(48, 54, 61, 0.4);
+        }
+        .filter-btn.all.active { background: rgba(88, 101, 242, 0.2); border-color: #5865f2; color: #5865f2; }
+        .filter-btn.normal.active { background: rgba(88, 101, 242, 0.15); border-color: #3fb950; color: #3fb950; }
+        .filter-btn.edited.active { background: rgba(210, 153, 34, 0.2); border-color: #d29922; color: #d29922; }
+        .filter-btn.deleted.active { background: rgba(248, 81, 73, 0.2); border-color: #f85149; color: #f85149; }
+
+        /* LOGS LIST */
+        .logs-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .log-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            gap: 10px;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 0;
+        }
+        .log-item:hover {
+            background: rgba(22, 27, 34, 0.4);
+        }
+        .log-item .log-time {
+            color: #8b949e;
+            font-size: 11px;
+            flex-shrink: 0;
+            min-width: 70px;
+        }
+        .log-item .log-sender {
+            color: #8b949e;
+            font-size: 12px;
+            flex-shrink: 0;
+            max-width: 100px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .log-item .log-text {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            padding: 0 6px;
+        }
+        .log-item .log-icon {
+            font-size: 14px;
+            flex-shrink: 0;
+            margin-left: auto;
+        }
+        .log-item .log-icon.edited-icon { color: #d29922; }
+        .log-item .log-icon.deleted-icon { color: #f85149; }
+
+        .log-item.normal {
+            border-left: 3px solid #3fb950;
+            background: rgba(63, 185, 80, 0.05);
+        }
+        .log-item.edited {
+            border-left: 3px solid #d29922;
+            background: rgba(210, 153, 34, 0.08);
+        }
+        .log-item.deleted {
+            border-left: 3px solid #f85149;
+            background: rgba(248, 81, 73, 0.08);
+        }
+
         .chats-list { flex: 1; overflow-y: auto; padding: 8px 0; }
         .chat-item {
             display: flex; align-items: center; padding: 14px 16px; cursor: pointer;
@@ -134,45 +232,6 @@
         .chat-item .stats-badge { display: flex; gap: 6px; font-size: 10px; color: #8b949e; margin-top: 2px; }
         .chat-item .stats-badge .deleted-count { color: #f85149; }
         .chat-item .stats-badge .edited-count { color: #d29922; }
-
-        .accounts-list { flex: 1; overflow-y: auto; padding: 8px 0; }
-        .account-item {
-            display: flex; align-items: center; padding: 14px 16px;
-            cursor: pointer; transition: all 0.2s;
-            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
-            gap: 14px;
-        }
-        .account-item:hover { background: rgba(22, 27, 34, 0.5); }
-        .account-item.active {
-            background: rgba(88, 101, 242, 0.1);
-            border-left: 3px solid #5865f2;
-        }
-        .account-item .account-avatar {
-            width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(135deg, #2b5278, #1a3a5a);
-            display: flex; align-items: center; justify-content: center;
-            font-size: 18px; font-weight: 700; color: white; flex-shrink: 0;
-        }
-        .account-item .account-info { flex: 1; }
-        .account-item .account-info .account-name { font-weight: 600; font-size: 15px; color: #f0f6fc; }
-        .account-item .account-info .account-id { font-size: 12px; color: #8b949e; }
-        .account-item .account-check { color: #5865f2; font-size: 18px; }
-
-        .profile-section { flex: 1; overflow-y: auto; padding: 16px; }
-        .profile-section .info-card {
-            background: rgba(22, 27, 34, 0.8); border-radius: 12px; padding: 16px;
-            margin-bottom: 12px; border: 1px solid rgba(48, 54, 61, 0.5);
-        }
-        .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
-        .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
-        .profile-btn {
-            display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-            background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
-            border-radius: 12px; color: #f0f6fc; cursor: pointer; transition: all 0.2s;
-            width: 100%; text-align: left; font-size: 15px; margin-bottom: 8px;
-        }
-        .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
-        .profile-btn .icon { font-size: 20px; }
 
         .bottom-nav {
             display: flex; padding: 8px 16px 12px; background: rgba(22, 27, 34, 0.9);
@@ -205,10 +264,27 @@
         .msg-wrapper.outgoing .msg-bubble { background: #2b5278; color: white; border-bottom-right-radius: 3px; }
         .msg-wrapper.incoming { align-self: flex-start; }
         .msg-wrapper.incoming .msg-bubble { background: rgba(24, 37, 51, 0.8); color: #e6edf3; border-bottom-left-radius: 3px; }
-        .msg-wrapper.deleted .msg-bubble { background: rgba(43, 82, 120, 0.4) !important; color: rgba(255, 255, 255, 0.5) !important; text-decoration: line-through; }
+        .msg-wrapper.deleted .msg-bubble { background: rgba(248, 81, 73, 0.15) !important; color: rgba(255, 255, 255, 0.6) !important; text-decoration: line-through; border-left: 3px solid #f85149; }
         .msg-wrapper.deleted .delete-icon { margin-left: 4px; font-size: 12px; color: #f85149; }
+        .msg-wrapper.edited .msg-bubble { background: rgba(210, 153, 34, 0.15) !important; border-left: 3px solid #d29922; }
         .msg-wrapper.edited .edit-block { margin-top: 3px; padding: 4px 8px; background: rgba(22, 27, 34, 0.8); border-radius: 6px; border-left: 2px solid #d29922; font-size: 11px; max-width: 85%; }
         .msg-time { font-size: 10px; color: #8b949e; margin-top: 1px; padding: 0 4px; }
+
+        .profile-section { flex: 1; overflow-y: auto; padding: 16px; }
+        .profile-section .info-card {
+            background: rgba(22, 27, 34, 0.8); border-radius: 12px; padding: 16px;
+            margin-bottom: 12px; border: 1px solid rgba(48, 54, 61, 0.5);
+        }
+        .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
+        .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
+        .profile-btn {
+            display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+            background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 12px; color: #f0f6fc; cursor: pointer; transition: all 0.2s;
+            width: 100%; text-align: left; font-size: 15px; margin-bottom: 8px;
+        }
+        .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
+        .profile-btn .icon { font-size: 20px; }
 
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; }
         .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
@@ -226,6 +302,8 @@
             .chat-item .info .last-msg { font-size: 12px; }
             .header { padding: 10px 12px; }
             .header h1 { font-size: 15px; }
+            .log-item .log-sender { max-width: 60px; }
+            .log-item .log-time { min-width: 55px; font-size: 10px; }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -241,7 +319,7 @@
         <div class="wave"></div>
     </div>
 
-    <!-- ===== ПАРОЛЬ (всегда показывается первым) ===== -->
+    <!-- ===== ПАРОЛЬ ===== -->
     <div id="password-screen" class="content password-screen" style="display:flex;">
         <div class="lock-icon">🔐</div>
         <h2>Введите пароль</h2>
@@ -256,15 +334,26 @@
     <div id="main-screen" class="content hidden">
         <div class="app-container">
             <div class="header">
-                <h1 id="header-title">📱 Переписки</h1>
+                <h1 id="header-title">📱 Логи</h1>
                 <div class="header-actions">
-                    <button onclick="refreshChats()" title="Обновить" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;">🔄</button>
-                    <span class="badge" id="chats-count">0</span>
+                    <button onclick="refreshLogs()" title="Обновить" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;">🔄</button>
+                    <span class="badge" id="logs-count">0</span>
                 </div>
             </div>
 
-            <!-- Чаты -->
+            <!-- Фильтры -->
+            <div class="filters" id="filters">
+                <button class="filter-btn all active" data-filter="all" onclick="setFilter('all')">📋 Все</button>
+                <button class="filter-btn normal active" data-filter="normal" onclick="setFilter('normal')">💬 Обычные</button>
+                <button class="filter-btn edited active" data-filter="edited" onclick="setFilter('edited')">✏️ Ред.</button>
+                <button class="filter-btn deleted active" data-filter="deleted" onclick="setFilter('deleted')">🗑️ Удал.</button>
+            </div>
+
+            <!-- Список чатов -->
             <div id="chats-list" class="chats-list"></div>
+
+            <!-- Логи -->
+            <div id="logs-list" class="logs-list" style="display:none;"></div>
 
             <!-- Сообщения -->
             <div id="messages-view" class="messages-view">
@@ -275,9 +364,6 @@
                 </div>
                 <div id="messages-container" class="messages-container"></div>
             </div>
-
-            <!-- Аккаунты -->
-            <div id="accounts-view" class="accounts-list" style="display:none;"></div>
 
             <!-- Профиль -->
             <div id="profile-view" class="profile-section" style="display:none;">
@@ -300,8 +386,8 @@
                 <button class="nav-btn active" onclick="switchTab('chats')" id="tab-chats">
                     <span class="nav-icon">💬</span> Чаты
                 </button>
-                <button class="nav-btn" onclick="switchTab('accounts')" id="tab-accounts">
-                    <span class="nav-icon">🔗</span> Аккаунты
+                <button class="nav-btn" onclick="switchTab('logs')" id="tab-logs">
+                    <span class="nav-icon">📋</span> Логи
                 </button>
                 <button class="nav-btn" onclick="switchTab('profile')" id="tab-profile">
                     <span class="nav-icon">👤</span> Профиль
@@ -322,16 +408,19 @@
         let initData = '';
         let userId = null;
         let currentTab = 'chats';
-        let selectedAccountId = null;
+        let selectedChatId = null;
         let allChats = [];
+        let allLogs = [];
+        let filteredLogs = [];
+        let currentFilter = 'all';
+        let activeFilters = { all: true, normal: true, edited: true, deleted: true };
         let allMessages = [];
         let currentChatId = null;
-        let accountsData = [];
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
 
         // ============================================================
-        // АВТОРИЗАЦИЯ В МИНИ-ПРИЛОЖЕНИИ
+        // АВТОРИЗАЦИЯ
         // ============================================================
         function login() {
             const input = document.getElementById('password-input');
@@ -363,41 +452,7 @@
         }
 
         // ============================================================
-        // РАБОТА С LOCALSTORAGE
-        // ============================================================
-        function getAccountKey(accountId) {
-            return `chats_${accountId}`;
-        }
-
-        function loadChatsFromLocal(accountId) {
-            try {
-                const key = getAccountKey(accountId);
-                const data = localStorage.getItem(key);
-                if (data) {
-                    return JSON.parse(data);
-                }
-            } catch (e) {}
-            return null;
-        }
-
-        function saveChatsToLocal(accountId, chats) {
-            try {
-                const key = getAccountKey(accountId);
-                localStorage.setItem(key, JSON.stringify(chats));
-            } catch (e) {
-                console.error('Ошибка сохранения:', e);
-            }
-        }
-
-        function clearAccountChats(accountId) {
-            try {
-                const key = getAccountKey(accountId);
-                localStorage.removeItem(key);
-            } catch (e) {}
-        }
-
-        // ============================================================
-        // ИНИЦИАЛИЗАЦИЯ (вызывается после ввода пароля)
+        // ИНИЦИАЛИЗАЦИЯ
         // ============================================================
         function initApp() {
             if (!tg || !tg.initData) {
@@ -422,123 +477,74 @@
             }
 
             document.getElementById('profile-user-id').textContent = userId || 'Неизвестно';
-
-            try {
-                const saved = localStorage.getItem('selected_account');
-                if (saved) selectedAccountId = saved;
-            } catch (e) {}
-
-            loadAccounts();
+            loadChats();
         }
 
         // ============================================================
-        // АККАУНТЫ
+        // ФИЛЬТРЫ
         // ============================================================
-        async function loadAccounts() {
-            const container = document.getElementById('accounts-view');
-            if (!container) return;
+        function setFilter(filter) {
+            const btn = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
+            if (!btn) return;
 
+            if (filter === 'all') {
+                const allActive = activeFilters.all;
+                activeFilters.all = !allActive;
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    if (b.dataset.filter !== 'all') {
+                        b.classList.toggle('active', activeFilters.all);
+                        activeFilters[b.dataset.filter] = activeFilters.all;
+                    }
+                });
+                btn.classList.toggle('active');
+                document.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => {
+                    b.classList.toggle('active', activeFilters.all);
+                });
+            } else {
+                btn.classList.toggle('active');
+                activeFilters[filter] = btn.classList.contains('active');
+                // Проверяем все ли фильтры активны
+                const allActive = document.querySelectorAll('.filter-btn:not([data-filter="all"])');
+                const allChecked = Array.from(allActive).every(b => b.classList.contains('active'));
+                document.querySelector('.filter-btn[data-filter="all"]').classList.toggle('active', allChecked);
+                activeFilters.all = allChecked;
+            }
+
+            applyFilters();
+        }
+
+        function applyFilters() {
+            const showNormal = activeFilters.normal;
+            const showEdited = activeFilters.edited;
+            const showDeleted = activeFilters.deleted;
+
+            filteredLogs = allLogs.filter(log => {
+                if (log.is_deleted && !showDeleted) return false;
+                if (log.edited_at && !showEdited) return false;
+                if (!log.is_deleted && !log.edited_at && !showNormal) return false;
+                return true;
+            });
+
+            renderLogs();
+        }
+
+        // ============================================================
+        // ЗАГРУЗКА ЧАТОВ
+        // ============================================================
+        async function loadChats() {
+            const container = document.getElementById('chats-list');
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
 
             try {
-                const response = await fetch(`${API_URL}/api/accounts`, {
+                const response = await fetch(`${API_URL}/api/chats`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ init_data: initData })
                 });
 
                 const data = await response.json();
-                accountsData = data.accounts || [];
-
-                if (accountsData.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">🔗</div>
-                            <div class="title">Нет аккаунтов</div>
-                            <p style="font-size:13px;">Подключите бизнес-аккаунт через бота</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                if (!accountsData.some(a => String(a.id) === String(selectedAccountId))) {
-                    selectedAccountId = accountsData[0]?.id || null;
-                    if (selectedAccountId) {
-                        localStorage.setItem('selected_account', selectedAccountId);
-                    }
-                }
-
-                renderAccounts(accountsData);
-
-                if (selectedAccountId) {
-                    loadChatsForAccount(selectedAccountId);
-                }
-
-            } catch (e) {
-                console.error('❌ Ошибка загрузки аккаунтов:', e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
-            }
-        }
-
-        function renderAccounts(accounts) {
-            const container = document.getElementById('accounts-view');
-            container.innerHTML = accounts.map(acc => {
-                const isActive = String(acc.id) === String(selectedAccountId);
-                const name = acc.name || `Аккаунт ${acc.id}`;
-                return `
-                    <div class="account-item ${isActive ? 'active' : ''}" onclick="selectAccount('${acc.id}')">
-                        <div class="account-avatar">${name.charAt(0).toUpperCase()}</div>
-                        <div class="account-info">
-                            <div class="account-name">${name}</div>
-                            <div class="account-id">ID: ${acc.id}</div>
-                        </div>
-                        ${isActive ? '<span class="account-check">✅</span>' : ''}
-                    </div>
-                `;
-            }).join('');
-        }
-
-        function selectAccount(accountId) {
-            if (String(accountId) === String(selectedAccountId)) return;
-            selectedAccountId = accountId;
-            localStorage.setItem('selected_account', accountId);
-            renderAccounts(accountsData);
-            switchTab('chats');
-            loadChatsForAccount(accountId);
-        }
-
-        // ============================================================
-        // ЗАГРУЗКА ЧАТОВ ДЛЯ АККАУНТА
-        // ============================================================
-        async function loadChatsForAccount(accountId) {
-            const container = document.getElementById('chats-list');
-            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
-
-            const localChats = loadChatsFromLocal(accountId);
-            if (localChats && localChats.length > 0) {
-                allChats = localChats;
-                renderChats(localChats);
-                document.getElementById('chats-count').textContent = localChats.length;
-            }
-
-            try {
-                const requestData = { init_data: initData };
-                if (accountId && accountId !== 'default') {
-                    requestData.account_id = accountId;
-                }
-
-                const response = await fetch(`${API_URL}/api/chats`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
-                });
-
-                const data = await response.json();
 
                 if (!data.chats || data.chats.length === 0) {
-                    if (localChats && localChats.length > 0) {
-                        clearAccountChats(accountId);
-                    }
                     container.innerHTML = `
                         <div class="empty-state">
                             <div class="icon">📭</div>
@@ -546,20 +552,18 @@
                             <p style="font-size:13px;">Переписки появятся после подключения бота</p>
                         </div>
                     `;
-                    document.getElementById('chats-count').textContent = '0';
+                    document.getElementById('logs-count').textContent = '0';
                     return;
                 }
 
                 allChats = data.chats;
-                saveChatsToLocal(accountId, allChats);
+                document.getElementById('logs-count').textContent = allChats.length;
                 renderChats(allChats);
-                document.getElementById('chats-count').textContent = allChats.length;
+                loadAllLogs();
 
             } catch (e) {
                 console.error('❌ Ошибка:', e);
-                if (!localChats || localChats.length === 0) {
-                    container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
-                }
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
@@ -568,7 +572,7 @@
             container.innerHTML = chats.map(chat => {
                 const displayName = chat.other_party_name || chat.name || 'Чат';
                 return `
-                    <div class="chat-item" onclick="loadMessages(${chat.chat_id}, '${displayName}')">
+                    <div class="chat-item" onclick="openChat(${chat.chat_id}, '${displayName}')">
                         <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
                         <div class="info">
                             <div class="name">${displayName}</div>
@@ -585,113 +589,112 @@
         }
 
         // ============================================================
-        // ВКЛАДКИ
+        // ЗАГРУЗКА ВСЕХ ЛОГОВ
         // ============================================================
-        function switchTab(tab) {
-            currentTab = tab;
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+        async function loadAllLogs() {
+            try {
+                const response = await fetch(`${API_URL}/api/all_messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ init_data: initData })
+                });
 
-            const chatsList = document.getElementById('chats-list');
-            const messagesView = document.getElementById('messages-view');
-            const accountsView = document.getElementById('accounts-view');
-            const profileView = document.getElementById('profile-view');
+                const data = await response.json();
 
-            chatsList.style.display = 'none';
-            messagesView.classList.remove('visible');
-            accountsView.style.display = 'none';
-            profileView.style.display = 'none';
-
-            if (tab === 'chats') {
-                document.getElementById('tab-chats').classList.add('active');
-                document.getElementById('header-title').textContent = '📱 Переписки';
-                chatsList.style.display = 'block';
-                if (selectedAccountId) {
-                    loadChatsForAccount(selectedAccountId);
-                } else {
-                    loadAccounts();
+                if (!data.messages || data.messages.length === 0) {
+                    allLogs = [];
+                    filteredLogs = [];
+                    renderLogs();
+                    return;
                 }
-            } else if (tab === 'accounts') {
-                document.getElementById('tab-accounts').classList.add('active');
-                document.getElementById('header-title').textContent = '🔗 Аккаунты';
-                accountsView.style.display = 'block';
-                renderAccounts(accountsData);
-            } else if (tab === 'profile') {
-                document.getElementById('tab-profile').classList.add('active');
-                document.getElementById('header-title').textContent = '👤 Профиль';
-                profileView.style.display = 'block';
+
+                allLogs = data.messages;
+                applyFilters();
+
+            } catch (e) {
+                console.error('❌ Ошибка загрузки логов:', e);
             }
         }
 
-        function refreshChats() {
-            if (selectedAccountId) {
-                const container = document.getElementById('chats-list');
-                container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Обновление...</div>';
-                
-                fetch(`${API_URL}/api/chats`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        init_data: initData,
-                        account_id: selectedAccountId !== 'default' ? selectedAccountId : undefined
-                    })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    if (data.chats && data.chats.length > 0) {
-                        allChats = data.chats;
-                        saveChatsToLocal(selectedAccountId, allChats);
-                        renderChats(allChats);
-                        document.getElementById('chats-count').textContent = allChats.length;
-                    } else {
-                        clearAccountChats(selectedAccountId);
-                        document.getElementById('chats-list').innerHTML = `
-                            <div class="empty-state">
-                                <div class="icon">📭</div>
-                                <div class="title">Нет чатов</div>
-                                <p style="font-size:13px;">Переписки появятся после подключения бота</p>
-                            </div>
-                        `;
-                        document.getElementById('chats-count').textContent = '0';
-                    }
-                })
-                .catch(e => {
-                    console.error('Ошибка обновления:', e);
-                    container.innerHTML = `<div class="empty-state"><p>❌ Ошибка обновления</p></div>`;
-                });
+        function renderLogs() {
+            const container = document.getElementById('logs-list');
+            if (!container) return;
+
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">📭</div>
+                        <div class="title">Нет логов</div>
+                        <p style="font-size:13px;">Сообщения появятся после подключения бота</p>
+                    </div>
+                `;
+                document.getElementById('logs-count').textContent = '0';
+                return;
             }
+
+            document.getElementById('logs-count').textContent = filteredLogs.length;
+
+            container.innerHTML = filteredLogs.map(log => {
+                const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
+                const sender = log.from_user_name || 'Неизвестный';
+                const text = log.text_content || '(без текста)';
+                
+                let typeClass = 'normal';
+                let icon = '';
+                if (log.is_deleted) {
+                    typeClass = 'deleted';
+                    icon = '🗑️';
+                } else if (log.edited_at) {
+                    typeClass = 'edited';
+                    icon = '➡️';
+                }
+
+                return `
+                    <div class="log-item ${typeClass}" onclick="openChat(${log.chat_id}, 'Чат')">
+                        <span class="log-time">${time}</span>
+                        <span class="log-sender">${sender}</span>
+                        <span class="log-text">${text}</span>
+                        ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================================
+        // ОТКРЫТЬ ЧАТ
+        // ============================================================
+        function openChat(chatId, chatName) {
+            currentChatId = chatId;
+            document.getElementById('chat-title').textContent = chatName || 'Чат';
+
+            document.getElementById('chats-list').style.display = 'none';
+            document.getElementById('logs-list').style.display = 'none';
+            document.getElementById('messages-view').classList.add('visible');
+
+            loadMessages(chatId);
         }
 
         function backToChats() {
             document.getElementById('messages-view').classList.remove('visible');
             document.getElementById('chats-list').style.display = 'block';
+            document.getElementById('logs-list').style.display = 'none';
             currentChatId = null;
             allMessages = [];
             switchTab('chats');
         }
 
         // ============================================================
-        // СООБЩЕНИЯ
+        // ЗАГРУЗКА СООБЩЕНИЙ ЧАТА
         // ============================================================
-        async function loadMessages(chatId, chatName) {
-            currentChatId = chatId;
-            document.getElementById('chat-title').textContent = chatName || 'Чат';
-
-            document.getElementById('chats-list').style.display = 'none';
-            document.getElementById('messages-view').classList.add('visible');
-
+        async function loadMessages(chatId) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
 
             try {
-                const requestData = { chat_id: chatId, init_data: initData };
-                if (selectedAccountId && selectedAccountId !== 'default') {
-                    requestData.account_id = selectedAccountId;
-                }
-
                 const response = await fetch(`${API_URL}/api/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
+                    body: JSON.stringify({ chat_id: chatId, init_data: initData })
                 });
 
                 const data = await response.json();
@@ -846,6 +849,47 @@
         }
 
         // ============================================================
+        // ВКЛАДКИ
+        // ============================================================
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+
+            const chatsList = document.getElementById('chats-list');
+            const logsList = document.getElementById('logs-list');
+            const messagesView = document.getElementById('messages-view');
+            const profileView = document.getElementById('profile-view');
+
+            chatsList.style.display = 'none';
+            logsList.style.display = 'none';
+            messagesView.classList.remove('visible');
+            profileView.style.display = 'none';
+
+            if (tab === 'chats') {
+                document.getElementById('tab-chats').classList.add('active');
+                document.getElementById('header-title').textContent = '📱 Чаты';
+                chatsList.style.display = 'block';
+                document.getElementById('filters').style.display = 'none';
+                loadChats();
+            } else if (tab === 'logs') {
+                document.getElementById('tab-logs').classList.add('active');
+                document.getElementById('header-title').textContent = '📋 Логи';
+                logsList.style.display = 'block';
+                document.getElementById('filters').style.display = 'flex';
+                loadAllLogs();
+            } else if (tab === 'profile') {
+                document.getElementById('tab-profile').classList.add('active');
+                document.getElementById('header-title').textContent = '👤 Профиль';
+                profileView.style.display = 'block';
+                document.getElementById('filters').style.display = 'none';
+            }
+        }
+
+        function refreshLogs() {
+            loadAllLogs();
+        }
+
+        // ============================================================
         // ПРОФИЛЬ
         // ============================================================
         function logoutFromApp() {
@@ -859,16 +903,16 @@
         }
 
         // ============================================================
-        // ЗАПУСК — ВСЕГДА ПОКАЗЫВАЕМ ЭКРАН ПАРОЛЯ
+        // ЗАПУСК
         // ============================================================
         if (tg) {
             tg.ready();
             tg.expand();
         }
 
-        // Всегда показываем экран пароля
         document.getElementById('password-screen').style.display = 'flex';
         document.getElementById('main-screen').classList.add('hidden');
+        document.getElementById('filters').style.display = 'none';
     </script>
 
 </body>
