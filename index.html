@@ -387,12 +387,6 @@
             font-size: 20px;
         }
 
-        .profile-btn .check {
-            margin-left: auto;
-            color: #5865f2;
-            font-size: 18px;
-        }
-
         .bottom-nav {
             display: flex;
             padding: 8px 16px 12px;
@@ -555,39 +549,6 @@
             margin-bottom: 4px;
         }
 
-        .account-selector {
-            display: flex;
-            gap: 8px;
-            padding: 8px 16px;
-            background: rgba(22, 27, 34, 0.6);
-            border-bottom: 1px solid rgba(33, 38, 45, 0.3);
-            flex-shrink: 0;
-            overflow-x: auto;
-        }
-
-        .account-tab {
-            padding: 6px 14px;
-            border-radius: 20px;
-            background: rgba(33, 38, 45, 0.6);
-            color: #8b949e;
-            font-size: 12px;
-            font-weight: 500;
-            cursor: pointer;
-            white-space: nowrap;
-            border: 1px solid transparent;
-            transition: all 0.2s;
-        }
-
-        .account-tab.active {
-            background: rgba(88, 101, 242, 0.2);
-            color: #5865f2;
-            border-color: #5865f2;
-        }
-
-        .account-tab:hover {
-            background: rgba(48, 54, 61, 0.5);
-        }
-
         ::-webkit-scrollbar {
             width: 3px;
         }
@@ -671,9 +632,6 @@
                 </div>
             </div>
 
-            <!-- Селектор аккаунтов -->
-            <div class="account-selector" id="account-selector"></div>
-
             <!-- Список чатов -->
             <div id="chats-list" class="chats-list"></div>
 
@@ -696,12 +654,6 @@
                 <div class="info-card">
                     <div class="label">Статус</div>
                     <div class="value" id="profile-status">Пользователь</div>
-                </div>
-                <div id="profile-accounts">
-                    <div class="info-card" style="margin-top:12px;">
-                        <div class="label">📱 Подключенные бизнес-аккаунты</div>
-                        <div id="profile-accounts-list"></div>
-                    </div>
                 </div>
                 <button class="profile-btn" onclick="changePasswordInApp()">
                     <span class="icon">🔑</span>
@@ -744,8 +696,6 @@
         let currentTab = 'chats';
         let userId = null;
         let isAdmin = false;
-        let selectedAccount = null;
-        let connectedAccounts = [];
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
 
@@ -798,102 +748,6 @@
             isAdmin = userId === 5709389268 || userId === 8038746319;
             document.getElementById('profile-user-id').textContent = userId || 'Неизвестно';
             document.getElementById('profile-status').textContent = isAdmin ? 'Администратор ✅' : 'Пользователь';
-            
-            loadConnectedAccounts();
-            loadChats();
-        }
-
-        // ============================================================
-        //  ЗАГРУЗКА ПОДКЛЮЧЕННЫХ АККАУНТОВ
-        // ============================================================
-        async function loadConnectedAccounts() {
-            try {
-                const response = await fetch(`${API_URL}/api/connected_accounts`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ init_data: initData })
-                });
-                const data = await response.json();
-                
-                // Фильтруем только бизнес-аккаунты
-                connectedAccounts = (data.accounts || []).filter(acc => acc.type === 'business');
-                
-                // Если нет бизнес-аккаунтов, показываем дефолтный
-                if (connectedAccounts.length === 0) {
-                    connectedAccounts = [{
-                        id: 'default',
-                        name: 'Основной аккаунт',
-                        type: 'business'
-                    }];
-                }
-                
-                // Выбираем первый аккаунт
-                selectedAccount = connectedAccounts[0]?.id || 'default';
-                
-                renderAccountSelector();
-                renderProfileAccounts();
-                loadChats();
-            } catch (e) {
-                console.error('Ошибка загрузки аккаунтов:', e);
-                // Дефолтный аккаунт если ошибка
-                connectedAccounts = [{
-                    id: 'default',
-                    name: 'Основной аккаунт',
-                    type: 'business'
-                }];
-                selectedAccount = 'default';
-                renderAccountSelector();
-                renderProfileAccounts();
-            }
-        }
-
-        // ============================================================
-        //  ОТРИСОВКА СЕЛЕКТОРА АККАУНТОВ
-        // ============================================================
-        function renderAccountSelector() {
-            const container = document.getElementById('account-selector');
-            if (connectedAccounts.length <= 1) {
-                container.style.display = 'none';
-                return;
-            }
-            container.style.display = 'flex';
-            container.innerHTML = connectedAccounts.map(acc => `
-                <div class="account-tab ${selectedAccount === acc.id ? 'active' : ''}" 
-                     onclick="selectAccount('${acc.id}')">
-                    ${acc.name}
-                </div>
-            `).join('');
-        }
-
-        function renderProfileAccounts() {
-            const container = document.getElementById('profile-accounts-list');
-            if (!container) return;
-            
-            if (connectedAccounts.length === 0) {
-                container.innerHTML = '<div style="color:#8b949e;font-size:13px;padding:8px 0;">Нет подключенных аккаунтов</div>';
-                return;
-            }
-            
-            container.innerHTML = connectedAccounts.map(acc => `
-                <div class="profile-btn" onclick="selectAccount('${acc.id}')" style="margin-bottom:4px;">
-                    <span class="icon">📱</span>
-                    <span>${acc.name}</span>
-                    ${selectedAccount === acc.id ? '<span class="check">✅</span>' : ''}
-                </div>
-            `).join('');
-        }
-
-        // ============================================================
-        //  ВЫБОР АККАУНТА
-        // ============================================================
-        function selectAccount(accountId) {
-            if (selectedAccount === accountId) return;
-            selectedAccount = accountId;
-            renderAccountSelector();
-            renderProfileAccounts();
-            
-            // Переключаемся на вкладку чатов и загружаем чаты для выбранного аккаунта
-            switchTab('chats');
             loadChats();
         }
 
@@ -910,7 +764,6 @@
                 document.getElementById('chats-list').style.display = 'block';
                 document.getElementById('messages-view').classList.remove('visible');
                 document.getElementById('profile-view').style.display = 'none';
-                document.getElementById('account-selector').style.display = connectedAccounts.length > 1 ? 'flex' : 'none';
                 loadChats();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.add('active');
@@ -918,8 +771,6 @@
                 document.getElementById('chats-list').style.display = 'none';
                 document.getElementById('messages-view').classList.remove('visible');
                 document.getElementById('profile-view').style.display = 'block';
-                document.getElementById('account-selector').style.display = 'none';
-                renderProfileAccounts();
             }
         }
 
@@ -942,10 +793,7 @@
                 const response = await fetch(`${API_URL}/api/chats`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        init_data: initData,
-                        account_id: selectedAccount
-                    })
+                    body: JSON.stringify({ init_data: initData })
                 });
 
                 if (response.status === 403) {
@@ -1024,11 +872,7 @@
                 const response = await fetch(`${API_URL}/api/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        chat_id: chatId, 
-                        init_data: initData,
-                        account_id: selectedAccount
-                    })
+                    body: JSON.stringify({ chat_id: chatId, init_data: initData })
                 });
 
                 if (response.status === 403) {
