@@ -1,720 +1,1024 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
-"""
-Message Logger Bot — логирует ВСЕ сообщения бизнес-аккаунта
-Версия 2.0 — с Mini App, профилем и сменой пароля
-"""
-
-import asyncio
-import logging
-import hashlib
-from datetime import datetime, timedelta
-
-from aiogram import Bot, Dispatcher, types
-from aiogram.client.default import DefaultBotProperties
-from aiogram.enums import ParseMode
-from aiogram.filters import Command
-from aiogram.fsm.context import FSMContext
-from aiogram.fsm.state import State, StatesGroup
-from aiogram.fsm.storage.memory import MemoryStorage
-from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, Message, WebAppInfo
-from aiogram.utils.keyboard import InlineKeyboardBuilder
-
-from sqlalchemy import Column, Integer, String, Boolean, DateTime, Text, BigInteger, ForeignKey, select, func, desc, asc
-from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sessionmaker
-from sqlalchemy.orm import declarative_base
-
-# ============================================================
-# ==================== НАСТРОЙКИ ====================
-# ============================================================
-BOT_TOKEN = "8741660667:AAE51Z-n75oajRWRS0j4XuoVutF3xTNg8SI"
-ACCESS_PASSWORD = "166734"  # Новый пароль для сотрудников
-DATABASE_URL = "sqlite+aiosqlite:///./messages.db"
-SESSION_TTL_MINUTES = 30
-MINI_APP_URL = "https://pablorikoyes-wq.github.io/message_logger_bot-/"
-
-API_HOST = "0.0.0.0"
-API_PORT = 8000
-ALLOWED_ORIGIN = "https://pablorikoyes-wq.github.io"
-
-ADMIN_IDS = [8038746319, 5709389268]  # Админы (пароль не нужен)
-
-# ============================================================
-# ЛОГИРОВАНИЕ
-# ============================================================
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
-
-# ============================================================
-# БАЗА ДАННЫХ
-# ============================================================
-Base = declarative_base()
-
-class BusinessConnection(Base):
-    __tablename__ = "business_connections"
-    id = Column(Integer, primary_key=True)
-    connection_id = Column(String(64), unique=True, nullable=False)
-    user_id = Column(BigInteger, nullable=False)
-    connected_at = Column(DateTime, default=datetime.utcnow)
-    is_enabled = Column(Boolean, default=True)
-
-class Chat(Base):
-    __tablename__ = "chats"
-    id = Column(Integer, primary_key=True)
-    chat_id = Column(BigInteger, nullable=False)
-    connection_id = Column(String(64))
-    username = Column(String(255), nullable=True)
-    first_name = Column(String(255), nullable=True)
-    last_name = Column(String(255), nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-class Message(Base):
-    __tablename__ = "messages"
-    id = Column(Integer, primary_key=True)
-    message_id = Column(BigInteger, nullable=False)
-    chat_id = Column(BigInteger, nullable=False)
-    connection_id = Column(String(64))
-    from_user_id = Column(BigInteger, nullable=True)
-    from_user_name = Column(String(255), nullable=True)
-    content_type = Column(String(50), default="text")
-    text_content = Column(Text, nullable=True)
-    original_text = Column(Text, nullable=True)
-    file_id = Column(String(255), nullable=True)
-    sent_at = Column(DateTime, default=datetime.utcnow)
-    edited_at = Column(DateTime, nullable=True)
-    edit_count = Column(Integer, default=0)
-    is_deleted = Column(Boolean, default=False)
-    deleted_at = Column(DateTime, nullable=True)
-
-class MessageHistory(Base):
-    __tablename__ = "message_history"
-    id = Column(Integer, primary_key=True)
-    message_ref_id = Column(Integer, ForeignKey("messages.id"), nullable=False)
-    text_content = Column(Text, nullable=True)
-    changed_at = Column(DateTime, default=datetime.utcnow)
-
-class AuthSession(Base):
-    __tablename__ = "auth_sessions"
-    id = Column(Integer, primary_key=True)
-    telegram_id = Column(BigInteger, unique=True, nullable=False)
-    is_authorized = Column(Boolean, default=False)
-    pin_verified_at = Column(DateTime, nullable=True)
-
-engine = create_async_engine(DATABASE_URL, echo=False)
-AsyncSessionLocal = async_sessionmaker(engine, expire_on_commit=False)
-
-async def init_db():
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("✅ База данных готова")
-
-# ============================================================
-# АВТОРИЗАЦИЯ
-# ============================================================
-class AuthStates(StatesGroup):
-    waiting_for_pin = State()
-    waiting_for_new_password = State()
-    waiting_for_admin_id = State()
-
-authorized_sessions = {}
-
-def is_admin(user_id: int) -> bool:
-    return user_id in ADMIN_IDS
-
-def is_authorized(user_id: int) -> bool:
-    if user_id in authorized_sessions:
-        if datetime.utcnow() - authorized_sessions[user_id] < timedelta(minutes=SESSION_TTL_MINUTES):
-            return True
-    return False
-
-def set_authorized(user_id: int):
-    authorized_sessions[user_id] = datetime.utcnow()
-
-def logout_user(user_id: int):
-    authorized_sessions.pop(user_id, None)
-
-def can_view(callback: CallbackQuery) -> bool:
-    return is_authorized(callback.from_user.id) and is_admin(callback.from_user.id)
-
-# ============================================================
-# КЛАВИАТУРЫ
-# ============================================================
-def get_main_keyboard() -> InlineKeyboardMarkup:
-    """Главное меню с Mini App кнопкой"""
-    builder = InlineKeyboardBuilder()
-    builder.button(
-        text="📱 Открыть переписки",
-        web_app=WebAppInfo(url=MINI_APP_URL),
-        # В новой версии aiogram есть параметр color для кнопок
-    )
-    builder.adjust(1)
-    return builder.as_markup()
-
-def get_profile_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура профиля"""
-    builder = InlineKeyboardBuilder()
-    builder.button(text="🔑 Сменить пароль", callback_data="change_password")
-    builder.button(text="👥 Администраторы", callback_data="show_admins")
-    builder.button(text="🚪 Выйти", callback_data="logout")
-    builder.adjust(1)
-    return builder.as_markup()
-
-def get_chats_keyboard() -> InlineKeyboardMarkup:
-    """Клавиатура чатов (для админов)"""
-    builder = InlineKeyboardBuilder()
-    builder.button(text="📋 Список чатов", callback_data="chats")
-    builder.button(text="📊 Статистика", callback_data="stats")
-    builder.button(text="🗑️ Удалённые", callback_data="deleted_1")
-    builder.button(text="✏️ Отредактированные", callback_data="edited_1")
-    builder.button(text="🔙 Назад", callback_data="menu_back")
-    builder.adjust(2)
-    return builder.as_markup()
-
-def back_kb(target: str = "menu_back") -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="🔙 Назад", callback_data=target)]
-    ])
-
-def page_kb(prefix: str, page: int, has_next: bool) -> InlineKeyboardMarkup:
-    row = []
-    if page > 1:
-        row.append(InlineKeyboardButton(text="⬅️ Пред.", callback_data=f"{prefix}_{page-1}"))
-    if has_next:
-        row.append(InlineKeyboardButton(text="След. ➡️", callback_data=f"{prefix}_{page+1}"))
-    kb = [row] if row else []
-    kb.append([InlineKeyboardButton(text="🔙 Назад", callback_data="menu_back")])
-    return InlineKeyboardMarkup(inline_keyboard=kb)
-
-# ============================================================
-# БИЗНЕС-ОБРАБОТЧИКИ
-# ============================================================
-async def handle_business_connection(business_connection: types.BusinessConnection):
-    try:
-        conn_id = business_connection.id
-        user_id = business_connection.user.id
-
-        async with AsyncSessionLocal() as session:
-            existing = await session.execute(
-                select(BusinessConnection).where(BusinessConnection.connection_id == conn_id)
-            )
-            if not existing.scalar_one_or_none():
-                session.add(BusinessConnection(
-                    connection_id=conn_id,
-                    user_id=user_id,
-                    is_enabled=True
-                ))
-                await session.commit()
-                logger.info(f"✅ Business подключён: {conn_id}")
-    except Exception as e:
-        logger.exception(f"❌ Ошибка: {e}")
-
-async def handle_business_message(message: types.Message):
-    if not message.business_connection_id:
-        return
-
-    try:
-        async with AsyncSessionLocal() as session:
-            chat = await session.execute(
-                select(Chat).where(
-                    Chat.chat_id == message.chat.id,
-                    Chat.connection_id == message.business_connection_id
-                )
-            )
-            if not chat.scalar_one_or_none():
-                session.add(Chat(
-                    chat_id=message.chat.id,
-                    connection_id=message.business_connection_id,
-                    username=message.chat.username,
-                    first_name=message.chat.first_name,
-                    last_name=message.chat.last_name
-                ))
-
-            content_type = "text"
-            text_content = message.text or message.caption or ""
-
-            if message.photo:
-                content_type = "photo"
-            elif message.video:
-                content_type = "video"
-            elif message.voice:
-                content_type = "voice"
-            elif message.audio:
-                content_type = "audio"
-            elif message.animation:
-                content_type = "gif"
-            elif message.sticker:
-                content_type = "sticker"
-            elif message.document:
-                content_type = "document"
-
-            session.add(Message(
-                message_id=message.message_id,
-                chat_id=message.chat.id,
-                connection_id=message.business_connection_id,
-                from_user_id=message.from_user.id if message.from_user else None,
-                from_user_name=message.from_user.full_name if message.from_user else None,
-                content_type=content_type,
-                text_content=text_content,
-                original_text=text_content,
-                edit_count=0,
-                sent_at=message.date.replace(tzinfo=None) if message.date else datetime.utcnow()
-            ))
-            await session.commit()
-            logger.info(f"📩 Сохранено ({content_type})")
-    except Exception as e:
-        logger.exception(f"❌ Ошибка: {e}")
-
-async def handle_edited_business_message(message: types.Message):
-    if not message.business_connection_id:
-        return
-
-    try:
-        async with AsyncSessionLocal() as session:
-            msg = await session.execute(
-                select(Message).where(
-                    Message.chat_id == message.chat.id,
-                    Message.message_id == message.message_id,
-                    Message.connection_id == message.business_connection_id
-                )
-            )
-            msg = msg.scalar_one_or_none()
-            if msg:
-                session.add(MessageHistory(
-                    message_ref_id=msg.id,
-                    text_content=msg.text_content,
-                    changed_at=datetime.utcnow()
-                ))
-                msg.text_content = message.text or message.caption or ""
-                msg.edited_at = datetime.utcnow()
-                msg.edit_count = (msg.edit_count or 0) + 1
-                await session.commit()
-                logger.info("✏️ Отредактировано")
-    except Exception as e:
-        logger.exception(f"❌ Ошибка: {e}")
-
-async def handle_deleted_business_messages(event: types.BusinessMessagesDeleted):
-    try:
-        async with AsyncSessionLocal() as session:
-            for msg_id in event.message_ids:
-                msg = await session.execute(
-                    select(Message).where(
-                        Message.chat_id == event.chat.id,
-                        Message.message_id == msg_id,
-                        Message.connection_id == event.business_connection_id
-                    )
-                )
-                msg = msg.scalar_one_or_none()
-                if msg:
-                    msg.is_deleted = True
-                    msg.deleted_at = datetime.utcnow()
-                    logger.info("🗑️ Удалено")
-            await session.commit()
-    except Exception as e:
-        logger.exception(f"❌ Ошибка: {e}")
-
-# ============================================================
-# КОМАНДЫ
-# ============================================================
-async def start_command(message: Message, state: FSMContext):
-    """Обработчик /start — приветствие + Mini App"""
-    user_id = message.from_user.id
-    logger.info(f"📩 /start от {user_id}")
-
-    # Приветственное сообщение
-    text = (
-        "👋 *Привет!*\n\n"
-        "Это бот для отслеживания чатов.\n"
-        "Все сообщения логируются автоматически.\n\n"
-        "📱 Нажмите кнопку ниже, чтобы открыть переписки."
-    )
-
-    # Для админов — показываем дополнительное меню
-    if is_admin(user_id):
-        text += "\n\n🔹 Вы вошли как *администратор*."
-
-    # Показываем кнопку Mini App
-    await message.answer(
-        text,
-        reply_markup=get_main_keyboard(),
-        parse_mode=ParseMode.MARKDOWN
-    )
-
-async def menu_command(message: Message, state: FSMContext):
-    """Команда /menu — показать главное меню"""
-    await start_command(message, state)
-
-async def profile_command(message: Message, state: FSMContext):
-    """Команда /profile — показать профиль"""
-    user_id = message.from_user.id
-    
-    text = (
-        "👤 *Профиль*\n\n"
-        f"🆔 ID: `{user_id}`\n"
-        f"👑 Админ: {'✅' if is_admin(user_id) else '❌'}\n"
-        f"🔐 Авторизован: {'✅' if is_authorized(user_id) else '❌'}\n\n"
-        "Выберите действие:"
-    )
-    
-    await message.answer(
-        text,
-        reply_markup=get_profile_keyboard(),
-        parse_mode=ParseMode.MARKDOWN
-    )
-
-async def change_password_start(callback: CallbackQuery, state: FSMContext):
-    """Начало смены пароля (только для админов)"""
-    if not is_admin(callback.from_user.id):
-        await callback.answer("⛔ Только для администраторов", show_alert=True)
-        return
-
-    await callback.message.edit_text(
-        "🔑 *Смена пароля*\n\n"
-        "Введите новый пароль для сотрудников.\n\n"
-        "Пароль должен быть от 4 до 20 символов.",
-        reply_markup=back_kb("profile_back"),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await state.set_state(AuthStates.waiting_for_new_password)
-    await callback.answer()
-
-async def process_new_password(message: Message, state: FSMContext):
-    """Обработка нового пароля"""
-    if not is_admin(message.from_user.id):
-        await message.answer("⛔ Только для администраторов")
-        await state.clear()
-        return
-
-    new_password = message.text.strip()
-    
-    if len(new_password) < 4 or len(new_password) > 20:
-        await message.answer(
-            "❌ *Ошибка*\n\nПароль должен быть от 4 до 20 символов.\nПопробуйте снова:",
-            parse_mode=ParseMode.MARKDOWN
-        )
-        return
-
-    # Обновляем пароль в коде (сохраняем в БД)
-    global ACCESS_PASSWORD
-    ACCESS_PASSWORD = new_password
-    
-    # Сохраняем в БД
-    async with AsyncSessionLocal() as session:
-        # Сохраняем пароль в отдельную таблицу (можно добавить)
-        pass
-
-    await message.answer(
-        f"✅ *Пароль успешно изменён!*\n\n"
-        f"🔑 Новый пароль: `{new_password}`\n\n"
-        f"Теперь сотрудники будут использовать этот пароль для входа.",
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await state.clear()
-    await profile_command(message, state)
-
-async def show_admins(callback: CallbackQuery):
-    """Показать список администраторов"""
-    if not is_admin(callback.from_user.id):
-        await callback.answer("⛔ Только для администраторов", show_alert=True)
-        return
-
-    text = "👥 *Администраторы:*\n\n"
-    for admin_id in ADMIN_IDS:
-        text += f"👤 `{admin_id}`\n"
-
-    await callback.message.edit_text(
-        text,
-        reply_markup=back_kb("profile_back"),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-async def profile_back(callback: CallbackQuery):
-    """Назад в профиль"""
-    await profile_command(callback.message, None)
-    await callback.answer()
-
-# ============================================================
-# МЕНЮ АДМИНА (полный доступ)
-# ============================================================
-async def show_admin_menu(message: Message, state: FSMContext):
-    """Полное меню для админов"""
-    await state.clear()
-    await message.answer(
-        "📋 *Главное меню*\n\n"
-        "🔹 ВСЕ сообщения логируются:\n"
-        "   ✅ Новые\n"
-        "   ✏️ Редактирование (с полной историей)\n"
-        "   🗑️ Удаление (оригинал сохраняется)\n\n"
-        "Выберите действие:",
-        reply_markup=get_chats_keyboard(),
-        parse_mode=ParseMode.MARKDOWN
-    )
-
-async def show_chats(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Chat.chat_id, Chat.first_name, Chat.username, func.count(Message.id).label("count"))
-            .outerjoin(Message, Message.chat_id == Chat.chat_id)
-            .group_by(Chat.chat_id, Chat.first_name, Chat.username)
-            .order_by(func.count(Message.id).desc())
-        )
-        chats = result.all()
-
-    if not chats:
-        await callback.message.edit_text("📭 Нет чатов.", reply_markup=back_kb("menu_back"))
-        await callback.answer()
-        return
-
-    builder = InlineKeyboardBuilder()
-    for chat in chats:
-        chat_id, first_name, username, count = chat
-        if first_name:
-            name = first_name
-        elif username:
-            name = f"@{username}"
-        else:
-            name = f"Чат {chat_id}"
-        builder.button(text=f"📱 {name[:20]} ({count})", callback_data=f"chat_{chat_id}")
-    builder.button(text="🔙 Назад", callback_data="menu_back")
-    builder.adjust(1)
-
-    await callback.message.edit_text("📋 *Список чатов:*", reply_markup=builder.as_markup(), parse_mode=ParseMode.MARKDOWN)
-    await callback.answer()
-
-async def show_chat_messages(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-
-    chat_id = int(callback.data.replace("chat_", ""))
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Message).where(Message.chat_id == chat_id).order_by(asc(Message.sent_at)).limit(100)
-        )
-        messages = result.scalars().all()
-
-    if not messages:
-        await callback.message.edit_text("📭 Нет сообщений.", reply_markup=back_kb("chats"))
-        await callback.answer()
-        return
-
-    text = "💬 *Чат:*\n\n"
-    for msg in messages:
-        status = ""
-        if msg.is_deleted:
-            status = "🗑️ [УДАЛЕНО] "
-        elif msg.edited_at:
-            status = f"✏️ [ОТРЕДАКТИРОВАНО x{msg.edit_count}] "
-        text += f"{status}👤 {msg.from_user_name or 'Неизвестный'}\n"
-        text += f"📝 {(msg.text_content or '')[:100]}{'...' if len(msg.text_content or '') > 100 else ''}\n"
-        text += f"🕐 {msg.sent_at.strftime('%d.%m.%Y %H:%M')}\n"
-        if msg.edited_at:
-            text += f"✏️ Ред.: {msg.edited_at.strftime('%d.%m.%Y %H:%M')}\n"
-        if msg.deleted_at:
-            text += f"🗑️ Удалено: {msg.deleted_at.strftime('%d.%m.%Y %H:%M')}\n"
-        text += "\n"
-
-    await callback.message.edit_text(text[:4000], reply_markup=back_kb("chats"), parse_mode=ParseMode.MARKDOWN)
-    await callback.answer()
-
-async def show_deleted(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-
-    page = int(callback.data.replace("deleted_", ""))
-    page_size = 10
-    offset = (page - 1) * page_size
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Message)
-            .where(Message.is_deleted == True)
-            .order_by(desc(Message.deleted_at))
-            .offset(offset)
-            .limit(page_size + 1)
-        )
-        messages = result.scalars().all()
-
-    has_next = len(messages) > page_size
-    messages = messages[:page_size]
-
-    if not messages:
-        await callback.message.edit_text("📭 Удалённых сообщений нет.", reply_markup=back_kb("menu_back"))
-        await callback.answer()
-        return
-
-    text = f"🗑️ *Удалённые сообщения (стр. {page}):*\n\n"
-    for msg in messages:
-        text += f"👤 {msg.from_user_name or 'Неизвестный'} · чат `{msg.chat_id}`\n"
-        text += f"📝 {(msg.text_content or '')[:150]}{'...' if len(msg.text_content or '') > 150 else ''}\n"
-        text += f"🕐 Отправлено: {msg.sent_at.strftime('%d.%m.%Y %H:%M')}\n"
-        text += f"🗑️ Удалено: {msg.deleted_at.strftime('%d.%m.%Y %H:%M') if msg.deleted_at else '—'}\n\n"
-
-    await callback.message.edit_text(
-        text[:4000],
-        reply_markup=page_kb("deleted", page, has_next),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-async def show_edited(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-
-    page = int(callback.data.replace("edited_", ""))
-    page_size = 8
-    offset = (page - 1) * page_size
-
-    async with AsyncSessionLocal() as session:
-        result = await session.execute(
-            select(Message)
-            .where(Message.edited_at.isnot(None))
-            .order_by(desc(Message.edited_at))
-            .offset(offset)
-            .limit(page_size + 1)
-        )
-        messages = result.scalars().all()
-
-        has_next = len(messages) > page_size
-        messages = messages[:page_size]
-
-        if not messages:
-            await callback.message.edit_text("📭 Отредактированных сообщений нет.", reply_markup=back_kb("menu_back"))
-            await callback.answer()
-            return
-
-        text = f"✏️ *Отредактированные сообщения (стр. {page}):*\n\n"
-        for msg in messages:
-            hist_result = await session.execute(
-                select(MessageHistory)
-                .where(MessageHistory.message_ref_id == msg.id)
-                .order_by(MessageHistory.changed_at)
-            )
-            history = hist_result.scalars().all()
-
-            text += f"👤 {msg.from_user_name or 'Неизвестный'} · чат `{msg.chat_id}` · правок: {msg.edit_count}\n"
-            text += f"🕐 Отправлено: {msg.sent_at.strftime('%d.%m.%Y %H:%M')}\n"
-            text += f"🔹 Оригинал: {(msg.original_text or '')[:100]}\n"
-            for i, h in enumerate(history[:-1] if len(history) > 1 else [], start=1):
-                text += f"  ↳ версия {i}: {(h.text_content or '')[:100]}\n"
-            text += f"✅ Текущий текст: {(msg.text_content or '')[:100]}\n"
-            text += f"🕐 Последняя правка: {msg.edited_at.strftime('%d.%m.%Y %H:%M')}\n\n"
-
-    await callback.message.edit_text(
-        text[:4000],
-        reply_markup=page_kb("edited", page, has_next),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-async def show_stats(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-
-    async with AsyncSessionLocal() as session:
-        total = (await session.execute(select(func.count()).select_from(Message))).scalar()
-        deleted = (await session.execute(select(func.count()).where(Message.is_deleted == True))).scalar()
-        edited = (await session.execute(select(func.count()).where(Message.edited_at.isnot(None)))).scalar()
-        chats = (await session.execute(select(func.count()).select_from(Chat))).scalar()
-
-    await callback.message.edit_text(
-        f"📊 *СТАТИСТИКА*\n\n"
-        f"📨 Всего сообщений: {total}\n"
-        f"✏️ Отредактировано: {edited}\n"
-        f"🗑️ Удалено: {deleted} (оригиналы сохранены!)\n"
-        f"💬 Чатов: {chats}",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🗑️ Удалённые", callback_data="deleted_1"),
-             InlineKeyboardButton(text="✏️ Отредактированные", callback_data="edited_1")],
-            [InlineKeyboardButton(text="🔙 Назад", callback_data="menu_back")]
-        ]),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-async def back_to_menu(callback: CallbackQuery):
-    if not can_view(callback):
-        await callback.answer("⛔ Доступ запрещён", show_alert=True)
-        return
-    await callback.message.edit_text(
-        "📋 *Главное меню*",
-        reply_markup=get_chats_keyboard(),
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-async def logout(callback: CallbackQuery):
-    logout_user(callback.from_user.id)
-    await callback.message.edit_text(
-        "🚪 *Выход*\n\n"
-        "Для входа отправьте /start",
-        parse_mode=ParseMode.MARKDOWN
-    )
-    await callback.answer()
-
-# ============================================================
-# ЗАПУСК
-# ============================================================
-async def main():
-    await init_db()
-
-    api_app = create_api_app(
-        AsyncSessionLocal=AsyncSessionLocal,
-        Message=Message,
-        Chat=Chat,
-        MessageHistory=MessageHistory,
-        ADMIN_IDS=ADMIN_IDS,
-        BOT_TOKEN=BOT_TOKEN,
-        allowed_origin=ALLOWED_ORIGIN,
-    )
-    await start_api_server(api_app, host=API_HOST, port=API_PORT)
-
-    bot = Bot(token=BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
-    dp = Dispatcher(storage=MemoryStorage())
-
-    # Команды
-    dp.message.register(start_command, Command("start"))
-    dp.message.register(menu_command, Command("menu"))
-    dp.message.register(profile_command, Command("profile"))
-    dp.message.register(process_new_password, AuthStates.waiting_for_new_password)
-
-    # Бизнес-события
-    dp.business_connection.register(handle_business_connection)
-    dp.business_message.register(handle_business_message)
-    dp.edited_business_message.register(handle_edited_business_message)
-    dp.deleted_business_messages.register(handle_deleted_business_messages)
-
-    # Callback'и
-    dp.callback_query.register(change_password_start, lambda c: c.data == "change_password")
-    dp.callback_query.register(show_admins, lambda c: c.data == "show_admins")
-    dp.callback_query.register(profile_back, lambda c: c.data == "profile_back")
-    dp.callback_query.register(show_chats, lambda c: c.data == "chats")
-    dp.callback_query.register(show_chat_messages, lambda c: c.data.startswith("chat_"))
-    dp.callback_query.register(show_deleted, lambda c: c.data.startswith("deleted_"))
-    dp.callback_query.register(show_edited, lambda c: c.data.startswith("edited_"))
-    dp.callback_query.register(show_stats, lambda c: c.data == "stats")
-    dp.callback_query.register(back_to_menu, lambda c: c.data == "menu_back")
-    dp.callback_query.register(logout, lambda c: c.data == "logout")
-
-    @dp.error()
-    async def global_error_handler(event):
-        logger.exception(f"❌ Необработанная ошибка: {event.exception}")
-        return True
-
-    logger.info("🚀 Бот запущен!")
-    await dp.start_polling(bot)
-
-if __name__ == "__main__":
-    asyncio.run(main())
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Переписки</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0e17;
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 0;
+            margin: 0;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* ===== ВОЛНЫ ===== */
+        .waves {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 0;
+            pointer-events: none;
+            overflow: hidden;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: -10%;
+            left: -10%;
+            width: 120%;
+            height: 120%;
+            background: radial-gradient(ellipse at 50% 100%, rgba(88, 101, 242, 0.08) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: waveMove 8s ease-in-out infinite alternate;
+        }
+
+        .wave:nth-child(2) {
+            background: radial-gradient(ellipse at 30% 100%, rgba(88, 101, 242, 0.05) 0%, transparent 60%);
+            animation-delay: -3s;
+            animation-duration: 10s;
+        }
+
+        .wave:nth-child(3) {
+            background: radial-gradient(ellipse at 70% 100%, rgba(88, 101, 242, 0.06) 0%, transparent 50%);
+            animation-delay: -6s;
+            animation-duration: 12s;
+        }
+
+        @keyframes waveMove {
+            0% { transform: translateX(0) scale(1); }
+            100% { transform: translateX(5%) scale(1.05); }
+        }
+
+        /* ===== КОНТЕНТ ===== */
+        .content {
+            position: relative;
+            z-index: 1;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            max-width: 500px;
+            margin: 0 auto;
+            background: rgba(13, 17, 23, 0.92);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        /* ===== ПАРОЛЬ ===== */
+        .password-screen {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s ease;
+        }
+
+        .password-screen .lock-icon {
+            font-size: 56px;
+            margin-bottom: 16px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .password-screen h2 {
+            font-size: 22px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f6fc, #8b949e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .password-screen .sub {
+            color: #8b949e;
+            margin-top: 6px;
+            font-size: 14px;
+        }
+
+        .password-screen input {
+            width: 100%;
+            max-width: 280px;
+            padding: 12px 16px;
+            font-size: 18px;
+            background: rgba(26, 26, 46, 0.8);
+            border: 2px solid rgba(88, 101, 242, 0.3);
+            border-radius: 12px;
+            color: #f0f6fc;
+            text-align: center;
+            letter-spacing: 6px;
+            margin-top: 20px;
+            outline: none;
+            transition: all 0.3s;
+        }
+
+        .password-screen input:focus {
+            border-color: #5865f2;
+            box-shadow: 0 0 20px rgba(88, 101, 242, 0.2);
+        }
+
+        .password-screen button {
+            margin-top: 14px;
+            padding: 12px 40px;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 280px;
+        }
+
+        .password-screen button:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.3);
+        }
+
+        .password-screen .error {
+            color: #f85149;
+            margin-top: 10px;
+            font-size: 14px;
+            min-height: 24px;
+        }
+
+        .hidden { display: none !important; }
+
+        /* ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== */
+        .app-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(22, 27, 34, 0.8);
+            border-bottom: 1px solid rgba(33, 38, 45, 0.5);
+            flex-shrink: 0;
+            backdrop-filter: blur(10px);
+        }
+
+        .header h1 {
+            font-size: 17px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #f0f6fc, #8b949e);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header .badge {
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            color: white;
+            padding: 2px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        .header .header-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .header .header-actions button {
+            background: none;
+            border: none;
+            color: #8b949e;
+            font-size: 18px;
+            cursor: pointer;
+            padding: 4px;
+            transition: all 0.3s;
+        }
+
+        .header .header-actions button:hover { color: #f0f6fc; }
+
+        .back-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: none;
+            border: none;
+            color: #5865f2;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 4px 0;
+        }
+
+        /* ===== СПИСОК ЧАТОВ ===== */
+        .chats-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+
+        .chat-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            gap: 14px;
+            position: relative;
+            user-select: none;
+            border-radius: 0;
+        }
+
+        .chat-item:hover { background: rgba(22, 27, 34, 0.5); }
+        .chat-item.selected { background: rgba(26, 26, 62, 0.5); }
+        .chat-item.pinned { border-left: 3px solid #5865f2; }
+        .chat-item.archived { opacity: 0.5; }
+
+        .chat-item .avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #5865f2, #4752c4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+            text-transform: uppercase;
+        }
+
+        .chat-item .info { flex: 1; min-width: 0; }
+        .chat-item .info .name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #f0f6fc;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .chat-item .info .last-msg {
+            font-size: 13px;
+            color: #8b949e;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            margin-top: 2px;
+        }
+
+        .chat-item .time {
+            font-size: 11px;
+            color: #8b949e;
+            flex-shrink: 0;
+            margin-left: 6px;
+        }
+
+        .chat-item .stats-badge {
+            display: flex;
+            gap: 6px;
+            font-size: 10px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
+
+        .chat-item .stats-badge .deleted-count { color: #f85149; }
+        .chat-item .stats-badge .edited-count { color: #d29922; }
+
+        .chat-item .status-icon {
+            font-size: 14px;
+            margin-left: 4px;
+        }
+
+        .chat-item .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #30363d;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: transparent;
+        }
+
+        .chat-item .checkbox.checked {
+            background: #5865f2;
+            border-color: #5865f2;
+        }
+
+        .chat-item .checkbox.checked::after {
+            content: '✓';
+            color: white;
+            font-size: 12px;
+        }
+
+        /* ===== МОДАЛКА ===== */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.7);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+            padding: 16px;
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: rgba(22, 27, 34, 0.95);
+            border-radius: 14px;
+            padding: 20px;
+            max-width: 320px;
+            width: 100%;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .modal h3 { color: #f0f6fc; font-size: 17px; margin-bottom: 6px; }
+        .modal p { color: #8b949e; font-size: 13px; margin-bottom: 14px; line-height: 1.5; }
+        .modal .modal-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: flex-end;
+        }
+
+        .modal .modal-actions button {
+            padding: 6px 16px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .modal .modal-actions .btn-cancel {
+            background: rgba(33, 38, 45, 0.8);
+            color: #f0f6fc;
+        }
+
+        .modal .modal-actions .btn-cancel:hover { background: rgba(48, 54, 61, 0.8); }
+        .modal .modal-actions .btn-danger {
+            background: #f85149;
+            color: white;
+        }
+
+        .modal .modal-actions .btn-danger:hover { background: #da3633; }
+
+        .modal .checkbox-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 10px 0;
+            color: #8b949e;
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .modal .checkbox-row input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: #5865f2;
+            cursor: pointer;
+        }
+
+        /* ===== АДАПТИВ ===== */
+        @media (max-width: 480px) {
+            .chat-item { padding: 12px 14px; }
+            .chat-item .avatar { width: 40px; height: 40px; font-size: 15px; }
+            .chat-item .info .name { font-size: 14px; }
+            .chat-item .info .last-msg { font-size: 12px; }
+            .header { padding: 10px 12px; }
+            .header h1 { font-size: 15px; }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ===== ОСТАЛЬНЫЕ СТИЛИ ===== */
+        .msg-wrapper .sender-name {
+            font-size: 11px;
+            color: #8b949e;
+            margin-bottom: 1px;
+            padding-left: 10px;
+        }
+
+        .msg-bubble {
+            padding: 6px 12px;
+            border-radius: 10px;
+            max-width: 85%;
+            word-wrap: break-word;
+            position: relative;
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .msg-wrapper.outgoing { align-self: flex-end; }
+        .msg-wrapper.outgoing .msg-bubble {
+            background: #2b5278;
+            color: white;
+            border-bottom-right-radius: 3px;
+        }
+
+        .msg-wrapper.incoming { align-self: flex-start; }
+        .msg-wrapper.incoming .msg-bubble {
+            background: rgba(24, 37, 51, 0.8);
+            color: #e6edf3;
+            border-bottom-left-radius: 3px;
+        }
+
+        .msg-wrapper.deleted .msg-bubble {
+            background: rgba(43, 82, 120, 0.4) !important;
+            color: rgba(255,255,255,0.5) !important;
+            text-decoration: line-through;
+        }
+
+        .msg-wrapper.deleted .delete-icon {
+            margin-left: 4px;
+            font-size: 12px;
+            color: #f85149;
+        }
+
+        .msg-wrapper.edited .edit-block {
+            margin-top: 3px;
+            padding: 4px 8px;
+            background: rgba(22, 27, 34, 0.8);
+            border-radius: 6px;
+            border-left: 2px solid #d29922;
+            font-size: 11px;
+            max-width: 85%;
+        }
+
+        .msg-time {
+            font-size: 10px;
+            color: #8b949e;
+            margin-top: 1px;
+            padding: 0 4px;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: #8b949e;
+        }
+
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state .title { font-size: 16px; font-weight: 600; color: #f0f6fc; margin-bottom: 4px; }
+
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
+    </style>
+</head>
+<body>
+
+    <!-- ===== ВОЛНЫ ===== -->
+    <div class="waves">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <!-- ===== ПАРОЛЬ ===== -->
+    <div id="password-screen" class="content password-screen">
+        <div class="lock-icon">🔐</div>
+        <h2>Введите пароль</h2>
+        <p class="sub">Для доступа к перепискам</p>
+        <input type="password" id="password-input" placeholder="Введите пароль" maxlength="20" />
+        <button onclick="login()">Войти</button>
+        <div id="login-error" class="error"></div>
+    </div>
+
+    <!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
+    <div id="main-screen" class="content hidden">
+        <div class="app-container">
+            <div class="header">
+                <h1>📱 Переписки</h1>
+                <div class="header-actions">
+                    <button onclick="toggleTrashMode()" id="trash-btn" title="Корзина">🗑️</button>
+                    <span class="badge" id="chats-count">0</span>
+                </div>
+            </div>
+
+            <div id="chats-list" class="chats-list"></div>
+
+            <div id="messages-view" class="hidden" style="flex:1;display:none;flex-direction:column;">
+                <div class="header" style="border-bottom: none; padding: 8px 16px;">
+                    <button class="back-btn" onclick="backToChats()">← Назад</button>
+                    <h1 id="chat-title" style="font-size:15px;">Чат</h1>
+                    <span style="width:40px;"></span>
+                </div>
+                <div id="messages-container" class="chats-list" style="padding:8px 12px;display:flex;flex-direction:column;gap:2px;"></div>
+            </div>
+
+            <!-- Корзина -->
+            <div id="trash-banner" class="hidden" style="background:rgba(26,16,18,0.9);padding:6px 12px;display:none;align-items:center;justify-content:space-between;border-top:1px solid rgba(42,26,26,0.5);flex-shrink:0;">
+                <span style="color:#f85149;font-weight:600;font-size:13px;">🗑️ Режим корзины</span>
+                <div style="display:flex;gap:6px;">
+                    <button onclick="clearTrash()" style="background:none;border:none;color:#f85149;cursor:pointer;font-size:13px;">🧹 Очистить</button>
+                    <button onclick="toggleTrashMode()" style="background:none;border:none;color:#8b949e;cursor:pointer;font-size:13px;">✕</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===== МОДАЛКА ===== -->
+    <div id="confirm-modal" class="modal-overlay">
+        <div class="modal">
+            <h3 id="modal-title">Подтверждение</h3>
+            <p id="modal-text">Вы уверены?</p>
+            <div class="checkbox-row" id="modal-checkbox-row">
+                <input type="checkbox" id="modal-dont-ask" />
+                <label for="modal-dont-ask">Не спрашивать больше</label>
+            </div>
+            <div class="modal-actions">
+                <button class="btn-cancel" onclick="closeModal()">Отмена</button>
+                <button class="btn-danger" id="modal-confirm-btn" onclick="confirmAction()">Удалить</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================================
+        //  КОНФИГ
+        // ============================================================
+        const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
+        const PASSWORD = '166734';
+
+        let tg = null;
+        let currentChatId = null;
+        let allMessages = [];
+        let allChats = [];
+        let initData = '';
+        let trashMode = false;
+        let selectedChats = new Set();
+        let modalCallback = null;
+        let pinnedChats = new Set();
+        let archivedChats = new Set();
+
+        try { tg = window.Telegram?.WebApp; } catch (e) {}
+
+        // ============================================================
+        //  АВТОРИЗАЦИЯ
+        // ============================================================
+        function login() {
+            const input = document.getElementById('password-input');
+            const error = document.getElementById('login-error');
+            const password = input.value.trim();
+
+            if (password === PASSWORD) {
+                error.textContent = '';
+                document.getElementById('password-screen').style.display = 'none';
+                document.getElementById('main-screen').classList.remove('hidden');
+                initApp();
+            } else {
+                error.textContent = '❌ Неверный пароль';
+                input.value = '';
+                input.focus();
+            }
+        }
+
+        document.getElementById('password-input').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') login();
+        });
+
+        // ============================================================
+        //  ИНИЦИАЛИЗАЦИЯ
+        // ============================================================
+        function initApp() {
+            if (!tg || !tg.initData) {
+                document.getElementById('main-screen').classList.add('hidden');
+                document.getElementById('password-screen').style.display = 'flex';
+                document.querySelector('#password-screen .sub').textContent = 'Открой через Telegram';
+                return;
+            }
+            tg.ready();
+            tg.expand();
+            initData = tg.initData;
+            loadChats();
+        }
+
+        // ============================================================
+        //  ЗАГРУЗКА ЧАТОВ
+        // ============================================================
+        async function loadChats() {
+            const container = document.getElementById('chats-list');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/chats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ init_data: initData })
+                });
+
+                if (response.status === 403) {
+                    document.getElementById('main-screen').classList.add('hidden');
+                    document.getElementById('password-screen').style.display = 'flex';
+                    document.querySelector('#password-screen .sub').textContent = '⛔ Доступ запрещён';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.chats || data.chats.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">Нет чатов</div>
+                            <p style="font-size:13px;">Переписки появятся после подключения бота</p>
+                        </div>
+                    `;
+                    document.getElementById('chats-count').textContent = '0';
+                    return;
+                }
+
+                allChats = data.chats;
+                document.getElementById('chats-count').textContent = allChats.length;
+
+                loadChatStates();
+                renderChats(allChats);
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+            }
+        }
+
+        function loadChatStates() {
+            try {
+                const saved = localStorage.getItem('chat_states');
+                if (saved) {
+                    const states = JSON.parse(saved);
+                    pinnedChats = new Set(states.pinned || []);
+                    archivedChats = new Set(states.archived || []);
+                }
+            } catch (e) {}
+        }
+
+        function saveChatStates() {
+            try {
+                localStorage.setItem('chat_states', JSON.stringify({
+                    pinned: Array.from(pinnedChats),
+                    archived: Array.from(archivedChats)
+                }));
+            } catch (e) {}
+        }
+
+        function renderChats(chats) {
+            const container = document.getElementById('chats-list');
+
+            const sorted = [...chats].sort((a, b) => {
+                const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
+                const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
+                return bPinned - aPinned;
+            });
+
+            container.innerHTML = sorted.map(chat => {
+                const isSelected = selectedChats.has(chat.chat_id);
+                const isPinned = pinnedChats.has(chat.chat_id);
+                const isArchived = archivedChats.has(chat.chat_id);
+
+                let statusIcon = '';
+                if (isPinned) statusIcon = '📌';
+                if (isArchived) statusIcon = '📦';
+
+                let displayName = chat.name || 'Чат';
+                if (chat.other_party_name) {
+                    displayName = chat.other_party_name;
+                }
+
+                return `
+                    <div class="chat-item ${isSelected ? 'selected' : ''} ${isPinned ? 'pinned' : ''} ${isArchived ? 'archived' : ''}" 
+                         data-chat-id="${chat.chat_id}"
+                         onclick="${trashMode ? `toggleSelectChat(${chat.chat_id})` : `loadMessages(${chat.chat_id}, '${displayName}')`}">
+                        ${trashMode ? `
+                            <div class="checkbox ${isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); toggleSelectChat(${chat.chat_id})"></div>
+                        ` : ''}
+                        <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                        <div class="info">
+                            <div class="name">${displayName} ${statusIcon}</div>
+                            <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
+                            <div class="stats-badge">
+                                <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                                <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                            </div>
+                        </div>
+                        <div class="time">${chat.last_time || ''}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // ============================================================
+        //  ОСТАЛЬНЫЕ ФУНКЦИИ
+        // ============================================================
+        function toggleTrashMode() {
+            trashMode = !trashMode;
+            selectedChats.clear();
+            document.getElementById('trash-banner').style.display = trashMode ? 'flex' : 'none';
+            document.getElementById('trash-btn').style.color = trashMode ? '#f85149' : '#8b949e';
+            loadChats();
+        }
+
+        function toggleSelectChat(chatId) {
+            if (selectedChats.has(chatId)) {
+                selectedChats.delete(chatId);
+            } else {
+                selectedChats.add(chatId);
+            }
+            renderChats(allChats);
+        }
+
+        function clearTrash() {
+            if (selectedChats.size === 0) {
+                showModal('Корзина пуста', 'Выберите чаты для удаления');
+                return;
+            }
+            showModal(
+                'Удалить чаты?',
+                `Вы уверены, что хотите удалить ${selectedChats.size} чат(ов)? Это действие необратимо.`,
+                () => {
+                    const ids = Array.from(selectedChats);
+                    deleteChatsFromDB(ids);
+                }
+            );
+        }
+
+        async function deleteChatsFromDB(chatIds) {
+            try {
+                const response = await fetch(`${API_URL}/api/delete_chats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_ids: chatIds, init_data: initData })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    selectedChats.clear();
+                    loadChats();
+                }
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        // ============================================================
+        //  ЗАГРУЗКА СООБЩЕНИЙ
+        // ============================================================
+        async function loadMessages(chatId, chatName) {
+            currentChatId = chatId;
+            document.getElementById('chat-title').textContent = chatName || 'Чат';
+
+            document.getElementById('chats-list').style.display = 'none';
+            document.getElementById('messages-view').style.display = 'flex';
+
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
+
+            try {
+                const response = await fetch(`${API_URL}/api/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ chat_id: chatId, init_data: initData })
+                });
+
+                if (response.status === 403) {
+                    document.getElementById('main-screen').classList.add('hidden');
+                    document.getElementById('password-screen').style.display = 'flex';
+                    document.querySelector('#password-screen .sub').textContent = '⛔ Доступ запрещён';
+                    return;
+                }
+
+                const data = await response.json();
+
+                if (!data.messages || data.messages.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">Нет сообщений</div>
+                            <p style="font-size:13px;">В этом чате пока нет сообщений</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                allMessages = data.messages;
+                renderMessages(allMessages);
+
+            } catch (e) {
+                console.error(e);
+                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки</p></div>`;
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            let lastSender = null;
+            let msgGroup = [];
+
+            messages.forEach((msg, index) => {
+                const isMine = msg.from_user_name && msg.from_user_name.includes('⁠⁠⁠⁠');
+                const sender = msg.from_user_name || 'Неизвестный';
+
+                if (lastSender !== null && lastSender !== sender) {
+                    flushGroup(container, msgGroup);
+                    msgGroup = [];
+                }
+
+                msgGroup.push({ msg, isMine, sender });
+                lastSender = sender;
+
+                if (index === messages.length - 1) {
+                    flushGroup(container, msgGroup);
+                }
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function flushGroup(container, group) {
+            if (group.length === 0) return;
+
+            const isMine = group[0].isMine;
+            const sender = group[0].sender;
+            const showName = !isMine;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
+            wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
+
+            if (showName) {
+                const nameEl = document.createElement('div');
+                nameEl.className = 'sender-name';
+                nameEl.textContent = sender;
+                wrapper.appendChild(nameEl);
+            }
+
+            group.forEach(({ msg }) => {
+                const bubble = document.createElement('div');
+                let classes = 'msg-bubble';
+
+                const isDeleted = msg.is_deleted || false;
+                const isEdited = msg.edited_at && !isDeleted;
+
+                if (isDeleted) {
+                    classes += ' deleted';
+                    wrapper.classList.add('deleted');
+                } else if (isEdited) {
+                    classes += ' edited';
+                    wrapper.classList.add('edited');
+                }
+
+                bubble.className = classes;
+
+                let content = msg.text_content || '(без текста)';
+                const labels = {
+                    'photo': '📷 Фото',
+                    'video': '🎥 Видео',
+                    'voice': '🎤 Голосовое',
+                    'audio': '🎵 Аудио',
+                    'gif': '🎞️ GIF',
+                    'sticker': '🖼️ Стикер',
+                    'document': '📄 Файл'
+                };
+                if (msg.content_type && msg.content_type !== 'text') {
+                    content = labels[msg.content_type] || msg.content_type;
+                }
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+
+                if (isDeleted) {
+                    const deleteIcon = document.createElement('span');
+                    deleteIcon.className = 'delete-icon';
+                    deleteIcon.textContent = '🗑️';
+                    bubble.appendChild(deleteIcon);
+                }
+
+                const timeEl = document.createElement('div');
+                timeEl.className = 'msg-time';
+                const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
+                let timeHtml = timeStr;
+
+                if (isDeleted && msg.deleted_at) {
+                    timeHtml += ` | 🗑️ <span style="color:#f85149;">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
+                }
+
+                timeEl.innerHTML = timeHtml;
+
+                wrapper.appendChild(bubble);
+                wrapper.appendChild(timeEl);
+
+                if (isEdited && msg.original_text) {
+                    const editBlock = document.createElement('div');
+                    editBlock.className = 'edit-block';
+
+                    const oldText = document.createElement('div');
+                    oldText.className = 'old-text';
+                    oldText.textContent = msg.original_text || '(оригинал)';
+
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow-down';
+                    arrow.textContent = '⬇️';
+
+                    const newText = document.createElement('div');
+                    newText.className = 'new-text';
+                    newText.textContent = content;
+
+                    editBlock.appendChild(oldText);
+                    editBlock.appendChild(arrow);
+                    editBlock.appendChild(newText);
+
+                    wrapper.appendChild(editBlock);
+                }
+            });
+
+            container.appendChild(wrapper);
+        }
+
+        // ============================================================
+        //  МОДАЛКА
+        // ============================================================
+        function showModal(title, text, onConfirm) {
+            document.getElementById('modal-title').textContent = title;
+            document.getElementById('modal-text').textContent = text;
+            document.getElementById('modal-checkbox-row').style.display = 'flex';
+            document.getElementById('modal-dont-ask').checked = false;
+            modalCallback = onConfirm || null;
+            document.getElementById('confirm-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('confirm-modal').classList.remove('active');
+            modalCallback = null;
+        }
+
+        function confirmAction() {
+            const dontAsk = document.getElementById('modal-dont-ask').checked;
+            if (dontAsk) {
+                // dontAskAgain = true;
+            }
+            if (modalCallback) {
+                modalCallback();
+            }
+            closeModal();
+        }
+
+        function backToChats() {
+            document.getElementById('messages-view').style.display = 'none';
+            document.getElementById('chats-list').style.display = 'block';
+            currentChatId = null;
+            allMessages = [];
+            loadChats();
+        }
+
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        if (window.Telegram?.WebApp?.initData) {
+            document.getElementById('password-screen').style.display = 'none';
+            document.getElementById('main-screen').classList.remove('hidden');
+            initApp();
+        }
+    </script>
+
+</body>
+</html>
