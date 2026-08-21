@@ -6,12 +6,8 @@
     <title>Переписки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        /* ===== ОСНОВНЫЕ СТИЛИ (без изменений) ===== */
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: #0a0e17;
@@ -22,7 +18,6 @@
             overflow: hidden;
             position: relative;
         }
-
         .waves {
             position: fixed;
             bottom: 0;
@@ -33,7 +28,6 @@
             pointer-events: none;
             overflow: hidden;
         }
-
         .wave {
             position: absolute;
             bottom: -10%;
@@ -44,24 +38,20 @@
             border-radius: 50%;
             animation: waveMove 8s ease-in-out infinite alternate;
         }
-
         .wave:nth-child(2) {
             background: radial-gradient(ellipse at 30% 100%, rgba(88, 101, 242, 0.05) 0%, transparent 60%);
             animation-delay: -3s;
             animation-duration: 10s;
         }
-
         .wave:nth-child(3) {
             background: radial-gradient(ellipse at 70% 100%, rgba(88, 101, 242, 0.06) 0%, transparent 50%);
             animation-delay: -6s;
             animation-duration: 12s;
         }
-
         @keyframes waveMove {
             0% { transform: translateX(0) scale(1); }
             100% { transform: translateX(5%) scale(1.05); }
         }
-
         .content {
             position: relative;
             z-index: 1;
@@ -74,7 +64,6 @@
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
-
         .password-screen {
             flex: 1;
             display: flex;
@@ -85,103 +74,32 @@
             text-align: center;
             animation: fadeIn 0.5s ease;
         }
-
-        .password-screen .lock-icon {
-            font-size: 56px;
-            margin-bottom: 16px;
-            animation: pulse 2s ease-in-out infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .password-screen h2 {
-            font-size: 22px;
-            font-weight: 700;
-            background: linear-gradient(135deg, #f0f6fc, #8b949e);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-
-        .password-screen .sub {
-            color: #8b949e;
-            margin-top: 6px;
-            font-size: 14px;
-        }
-
+        .password-screen .lock-icon { font-size: 56px; margin-bottom: 16px; animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+        .password-screen h2 { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #f0f6fc, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .password-screen .sub { color: #8b949e; margin-top: 6px; font-size: 14px; }
         .password-screen input {
-            width: 100%;
-            max-width: 280px;
-            padding: 12px 16px;
-            font-size: 18px;
-            background: rgba(26, 26, 46, 0.8);
-            border: 2px solid rgba(88, 101, 242, 0.3);
-            border-radius: 12px;
-            color: #f0f6fc;
-            text-align: center;
-            letter-spacing: 6px;
-            margin-top: 20px;
-            outline: none;
-            transition: all 0.3s;
+            width: 100%; max-width: 280px; padding: 12px 16px; font-size: 18px;
+            background: rgba(26, 26, 46, 0.8); border: 2px solid rgba(88, 101, 242, 0.3);
+            border-radius: 12px; color: #f0f6fc; text-align: center; letter-spacing: 6px;
+            margin-top: 20px; outline: none; transition: all 0.3s;
         }
-
-        .password-screen input:focus {
-            border-color: #5865f2;
-            box-shadow: 0 0 20px rgba(88, 101, 242, 0.2);
-        }
-
+        .password-screen input:focus { border-color: #5865f2; box-shadow: 0 0 20px rgba(88, 101, 242, 0.2); }
         .password-screen .btn-primary {
-            margin-top: 14px;
-            padding: 12px 40px;
-            background: linear-gradient(135deg, #5865f2, #4752c4);
-            color: white;
-            border: none;
-            border-radius: 12px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            max-width: 280px;
+            margin-top: 14px; padding: 12px 40px; background: linear-gradient(135deg, #5865f2, #4752c4);
+            color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
+            cursor: pointer; transition: all 0.3s; width: 100%; max-width: 280px;
         }
-
-        .password-screen .btn-primary:hover {
-            transform: scale(1.02);
-            box-shadow: 0 4px 20px rgba(88, 101, 242, 0.3);
-        }
-
+        .password-screen .btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(88, 101, 242, 0.3); }
         .password-screen .btn-secondary {
-            margin-top: 10px;
-            padding: 10px 30px;
-            background: rgba(255, 255, 255, 0.05);
-            color: #8b949e;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s;
-            width: 100%;
-            max-width: 280px;
+            margin-top: 10px; padding: 10px 30px; background: rgba(255, 255, 255, 0.05);
+            color: #8b949e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: all 0.3s;
+            width: 100%; max-width: 280px;
         }
-
-        .password-screen .btn-secondary:hover {
-            background: rgba(255, 255, 255, 0.1);
-            color: #f0f6fc;
-        }
-
-        .password-screen .error {
-            color: #f85149;
-            margin-top: 10px;
-            font-size: 14px;
-            min-height: 24px;
-        }
-
-        .hidden {
-            display: none !important;
-        }
+        .password-screen .btn-secondary:hover { background: rgba(255, 255, 255, 0.1); color: #f0f6fc; }
+        .password-screen .error { color: #f85149; margin-top: 10px; font-size: 14px; min-height: 24px; }
+        .hidden { display: none !important; }
 
         .app-container {
             flex: 1;
@@ -189,7 +107,6 @@
             flex-direction: column;
             height: 100vh;
         }
-
         .header {
             display: flex;
             align-items: center;
@@ -200,7 +117,6 @@
             flex-shrink: 0;
             backdrop-filter: blur(10px);
         }
-
         .header h1 {
             font-size: 17px;
             font-weight: 700;
@@ -208,7 +124,6 @@
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
-
         .header .badge {
             background: linear-gradient(135deg, #5865f2, #4752c4);
             color: white;
@@ -217,13 +132,11 @@
             font-size: 11px;
             font-weight: 600;
         }
-
         .header .header-actions {
             display: flex;
             gap: 10px;
             align-items: center;
         }
-
         .header .header-actions button {
             background: none;
             border: none;
@@ -233,14 +146,8 @@
             padding: 4px;
             transition: all 0.3s;
         }
-
-        .header .header-actions button:hover {
-            color: #f0f6fc;
-        }
-
-        .header .header-actions .active-btn {
-            color: #5865f2;
-        }
+        .header .header-actions button:hover { color: #f0f6fc; }
+        .header .header-actions .active-btn { color: #5865f2; }
 
         .back-btn {
             display: inline-flex;
@@ -255,12 +162,12 @@
             padding: 4px 0;
         }
 
+        /* ===== СПИСОК ЧАТОВ ===== */
         .chats-list {
             flex: 1;
             overflow-y: auto;
             padding: 8px 0;
         }
-
         .chat-item {
             display: flex;
             align-items: center;
@@ -273,16 +180,11 @@
             user-select: none;
             border-radius: 0;
         }
-
-        .chat-item:hover {
-            background: rgba(22, 27, 34, 0.5);
-        }
-
+        .chat-item:hover { background: rgba(22, 27, 34, 0.5); }
         .chat-item.pinned {
             border-left: 3px solid #5865f2;
             background: rgba(88, 101, 242, 0.05);
         }
-
         .chat-item .avatar {
             width: 48px;
             height: 48px;
@@ -297,12 +199,7 @@
             flex-shrink: 0;
             text-transform: uppercase;
         }
-
-        .chat-item .info {
-            flex: 1;
-            min-width: 0;
-        }
-
+        .chat-item .info { flex: 1; min-width: 0; }
         .chat-item .info .name {
             font-weight: 600;
             font-size: 15px;
@@ -311,7 +208,6 @@
             overflow: hidden;
             text-overflow: ellipsis;
         }
-
         .chat-item .info .last-msg {
             font-size: 13px;
             color: #8b949e;
@@ -320,14 +216,12 @@
             text-overflow: ellipsis;
             margin-top: 2px;
         }
-
         .chat-item .time {
             font-size: 11px;
             color: #8b949e;
             flex-shrink: 0;
             margin-left: 6px;
         }
-
         .chat-item .stats-badge {
             display: flex;
             gap: 6px;
@@ -335,15 +229,8 @@
             color: #8b949e;
             margin-top: 2px;
         }
-
-        .chat-item .stats-badge .deleted-count {
-            color: #f85149;
-        }
-
-        .chat-item .stats-badge .edited-count {
-            color: #d29922;
-        }
-
+        .chat-item .stats-badge .deleted-count { color: #f85149; }
+        .chat-item .stats-badge .edited-count { color: #d29922; }
         .chat-item .checkbox {
             width: 20px;
             height: 20px;
@@ -357,36 +244,81 @@
             transition: all 0.2s;
             background: transparent;
         }
-
         .chat-item .checkbox.checked {
             background: #5865f2;
             border-color: #5865f2;
         }
-
         .chat-item .checkbox.checked::after {
             content: '✓';
             color: white;
             font-size: 12px;
         }
 
-        .chat-item .pin-icon {
+        /* ===== АККАУНТЫ ===== */
+        .accounts-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 0;
+        }
+        .account-item {
+            display: flex;
+            align-items: center;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            gap: 14px;
+        }
+        .account-item:hover {
+            background: rgba(22, 27, 34, 0.5);
+        }
+        .account-item.active {
+            background: rgba(88, 101, 242, 0.1);
+            border-left: 3px solid #5865f2;
+        }
+        .account-item .account-avatar {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2b5278, #1a3a5a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 700;
+            color: white;
+            flex-shrink: 0;
+        }
+        .account-item .account-info {
+            flex: 1;
+        }
+        .account-item .account-info .account-name {
+            font-weight: 600;
+            font-size: 15px;
+            color: #f0f6fc;
+        }
+        .account-item .account-info .account-id {
+            font-size: 12px;
+            color: #8b949e;
+        }
+        .account-item .account-badge {
+            font-size: 12px;
+            padding: 2px 10px;
+            border-radius: 20px;
+            background: rgba(88, 101, 242, 0.2);
             color: #5865f2;
-            font-size: 14px;
-            margin-left: 4px;
+        }
+        .account-item .account-check {
+            color: #5865f2;
+            font-size: 18px;
         }
 
-        .chat-item .delete-icon {
-            color: #f85149;
-            font-size: 14px;
-            margin-left: 4px;
-        }
-
+        /* ===== ПРОФИЛЬ ===== */
         .profile-section {
             flex: 1;
             overflow-y: auto;
             padding: 16px;
         }
-
         .profile-section .info-card {
             background: rgba(22, 27, 34, 0.8);
             border-radius: 12px;
@@ -394,19 +326,8 @@
             margin-bottom: 12px;
             border: 1px solid rgba(48, 54, 61, 0.5);
         }
-
-        .profile-section .info-card .label {
-            color: #8b949e;
-            font-size: 13px;
-        }
-
-        .profile-section .info-card .value {
-            color: #f0f6fc;
-            font-size: 16px;
-            font-weight: 600;
-            margin-top: 4px;
-        }
-
+        .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
+        .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
         .profile-btn {
             display: flex;
             align-items: center;
@@ -423,16 +344,10 @@
             font-size: 15px;
             margin-bottom: 8px;
         }
+        .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
+        .profile-btn .icon { font-size: 20px; }
 
-        .profile-btn:hover {
-            background: rgba(48, 54, 61, 0.5);
-            border-color: #5865f2;
-        }
-
-        .profile-btn .icon {
-            font-size: 20px;
-        }
-
+        /* ===== НИЖНЯЯ НАВИГАЦИЯ ===== */
         .bottom-nav {
             display: flex;
             padding: 8px 16px 12px;
@@ -444,7 +359,6 @@
             position: relative;
             z-index: 10;
         }
-
         .bottom-nav .nav-btn {
             flex: 1;
             padding: 8px;
@@ -453,17 +367,13 @@
             background: transparent;
             border: none;
             color: #8b949e;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 500;
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
         }
-
-        .bottom-nav .nav-btn.active {
-            color: #5865f2;
-        }
-
+        .bottom-nav .nav-btn.active { color: #5865f2; }
         .bottom-nav .nav-btn.active::after {
             content: '';
             position: absolute;
@@ -475,27 +385,16 @@
             background: #5865f2;
             border-radius: 2px;
         }
+        .bottom-nav .nav-btn:hover { color: #f0f6fc; }
+        .bottom-nav .nav-btn .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
-        .bottom-nav .nav-btn:hover {
-            color: #f0f6fc;
-        }
-
-        .bottom-nav .nav-btn .nav-icon {
-            font-size: 22px;
-            display: block;
-            margin-bottom: 2px;
-        }
-
+        /* ===== СООБЩЕНИЯ ===== */
         .messages-view {
             flex: 1;
             display: none;
             flex-direction: column;
         }
-
-        .messages-view.visible {
-            display: flex;
-        }
-
+        .messages-view.visible { display: flex; }
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -504,20 +403,17 @@
             flex-direction: column;
             gap: 2px;
         }
-
         .msg-wrapper {
             display: flex;
             flex-direction: column;
             max-width: 100%;
         }
-
         .msg-wrapper .sender-name {
             font-size: 11px;
             color: #8b949e;
             margin-bottom: 1px;
             padding-left: 10px;
         }
-
         .msg-bubble {
             padding: 6px 12px;
             border-radius: 10px;
@@ -527,39 +423,24 @@
             font-size: 13px;
             line-height: 1.4;
         }
-
-        .msg-wrapper.outgoing {
-            align-self: flex-end;
-        }
-
+        .msg-wrapper.outgoing { align-self: flex-end; }
         .msg-wrapper.outgoing .msg-bubble {
             background: #2b5278;
             color: white;
             border-bottom-right-radius: 3px;
         }
-
-        .msg-wrapper.incoming {
-            align-self: flex-start;
-        }
-
+        .msg-wrapper.incoming { align-self: flex-start; }
         .msg-wrapper.incoming .msg-bubble {
             background: rgba(24, 37, 51, 0.8);
             color: #e6edf3;
             border-bottom-left-radius: 3px;
         }
-
         .msg-wrapper.deleted .msg-bubble {
             background: rgba(43, 82, 120, 0.4) !important;
             color: rgba(255, 255, 255, 0.5) !important;
             text-decoration: line-through;
         }
-
-        .msg-wrapper.deleted .delete-icon {
-            margin-left: 4px;
-            font-size: 12px;
-            color: #f85149;
-        }
-
+        .msg-wrapper.deleted .delete-icon { margin-left: 4px; font-size: 12px; color: #f85149; }
         .msg-wrapper.edited .edit-block {
             margin-top: 3px;
             padding: 4px 8px;
@@ -569,7 +450,6 @@
             font-size: 11px;
             max-width: 85%;
         }
-
         .msg-time {
             font-size: 10px;
             color: #8b949e;
@@ -577,24 +457,40 @@
             padding: 0 4px;
         }
 
-        .empty-state {
-            text-align: center;
-            padding: 40px 20px;
+        /* ===== КОРЗИНА ===== */
+        .trash-banner {
+            background: rgba(26, 16, 18, 0.9);
+            padding: 8px 16px;
+            display: none;
+            align-items: center;
+            justify-content: space-between;
+            border-top: 1px solid rgba(42, 26, 26, 0.5);
+            flex-shrink: 0;
+        }
+        .trash-banner.visible { display: flex; }
+        .trash-banner span { color: #f85149; font-weight: 600; font-size: 13px; }
+        .trash-banner .trash-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+        .trash-banner button {
+            background: none;
+            border: none;
             color: #8b949e;
+            cursor: pointer;
+            font-size: 12px;
+            padding: 4px 10px;
+            border-radius: 6px;
+            transition: all 0.2s;
         }
+        .trash-banner button:hover { background: rgba(48, 54, 61, 0.5); color: #f0f6fc; }
+        .trash-banner .btn-clear-all { color: #f85149 !important; }
+        .trash-banner .btn-clear-all:hover { background: rgba(248, 81, 73, 0.15) !important; color: #ff6b6b !important; }
+        .trash-banner .btn-select-mode { color: #5865f2 !important; }
+        .trash-banner .btn-select-mode:hover { background: rgba(88, 101, 242, 0.15) !important; color: #7b88ff !important; }
+        .trash-banner .btn-select-mode.active { color: #f0f6fc !important; background: rgba(88, 101, 242, 0.2) !important; }
+        .trash-banner .btn-delete-selected { color: #f85149 !important; }
+        .trash-banner .btn-delete-selected:hover { background: rgba(248, 81, 73, 0.15) !important; }
+        .trash-banner .btn-exit-trash { color: #8b949e !important; }
 
-        .empty-state .icon {
-            font-size: 40px;
-            margin-bottom: 12px;
-        }
-
-        .empty-state .title {
-            font-size: 16px;
-            font-weight: 600;
-            color: #f0f6fc;
-            margin-bottom: 4px;
-        }
-
+        /* ===== КОНТЕКСТНОЕ МЕНЮ ===== */
         .context-menu {
             position: fixed;
             background: rgba(30, 35, 42, 0.95);
@@ -607,7 +503,6 @@
             border: 1px solid rgba(48, 54, 61, 0.5);
             display: none;
         }
-
         .context-menu button {
             display: flex;
             align-items: center;
@@ -622,147 +517,65 @@
             border-radius: 8px;
             transition: background 0.2s;
         }
+        .context-menu button:hover { background: rgba(48, 54, 61, 0.5); }
+        .context-menu .danger { color: #f85149; }
+        .context-menu .success { color: #3fb950; }
 
-        .context-menu button:hover {
-            background: rgba(48, 54, 61, 0.5);
-        }
+        /* ===== ОБЩИЕ ===== */
+        .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; }
+        .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+        .empty-state .title { font-size: 16px; font-weight: 600; color: #f0f6fc; margin-bottom: 4px; }
 
-        .context-menu .danger {
-            color: #f85149;
-        }
-
-        .context-menu .success {
-            color: #3fb950;
-        }
-
-        .trash-banner {
-            background: rgba(26, 16, 18, 0.9);
-            padding: 8px 16px;
-            display: none;
-            align-items: center;
-            justify-content: space-between;
-            border-top: 1px solid rgba(42, 26, 26, 0.5);
-            flex-shrink: 0;
-        }
-
-        .trash-banner.visible {
-            display: flex;
-        }
-
-        .trash-banner span {
-            color: #f85149;
-            font-weight: 600;
-            font-size: 13px;
-        }
-
-        .trash-banner .trash-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .trash-banner button {
-            background: none;
-            border: none;
-            color: #8b949e;
-            cursor: pointer;
-            font-size: 13px;
-            padding: 4px 10px;
-            border-radius: 6px;
-            transition: all 0.2s;
-        }
-
-        .trash-banner button:hover {
-            background: rgba(48, 54, 61, 0.5);
-            color: #f0f6fc;
-        }
-
-        .trash-banner .btn-clear-all {
-            color: #f85149 !important;
-        }
-
-        .trash-banner .btn-clear-all:hover {
-            background: rgba(248, 81, 73, 0.15) !important;
-            color: #ff6b6b !important;
-        }
-
-        .trash-banner .btn-select-mode {
-            color: #5865f2 !important;
-        }
-
-        .trash-banner .btn-select-mode:hover {
-            background: rgba(88, 101, 242, 0.15) !important;
-            color: #7b88ff !important;
-        }
-
-        .trash-banner .btn-select-mode.active {
-            color: #f0f6fc !important;
-            background: rgba(88, 101, 242, 0.2) !important;
-        }
-
-        .trash-banner .btn-delete-selected {
-            color: #f85149 !important;
-        }
-
-        .trash-banner .btn-delete-selected:hover {
-            background: rgba(248, 81, 73, 0.15) !important;
-        }
-
-        .trash-banner .btn-exit-trash {
-            color: #8b949e !important;
-        }
-
-        ::-webkit-scrollbar {
-            width: 3px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: transparent;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #30363d;
-            border-radius: 8px;
-        }
-
-        ::-webkit-scrollbar-thumb:hover {
-            background: #484f58;
-        }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
+        ::-webkit-scrollbar-thumb:hover { background: #484f58; }
 
         @media (max-width: 480px) {
-            .chat-item {
-                padding: 12px 14px;
-            }
-            .chat-item .avatar {
-                width: 40px;
-                height: 40px;
-                font-size: 15px;
-            }
-            .chat-item .info .name {
-                font-size: 14px;
-            }
-            .chat-item .info .last-msg {
-                font-size: 12px;
-            }
-            .header {
-                padding: 10px 12px;
-            }
-            .header h1 {
-                font-size: 15px;
-            }
-            .context-menu {
-                min-width: 150px;
-            }
+            .chat-item { padding: 12px 14px; }
+            .chat-item .avatar { width: 40px; height: 40px; font-size: 15px; }
+            .chat-item .info .name { font-size: 14px; }
+            .chat-item .info .last-msg { font-size: 12px; }
+            .header { padding: 10px 12px; }
+            .header h1 { font-size: 15px; }
+            .context-menu { min-width: 150px; }
+            .bottom-nav .nav-btn { font-size: 10px; }
+            .bottom-nav .nav-btn .nav-icon { font-size: 18px; }
         }
 
         @keyframes fadeIn {
-            from {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .account-selector {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(22, 27, 34, 0.6);
+            border-bottom: 1px solid rgba(33, 38, 45, 0.3);
+            flex-shrink: 0;
+            overflow-x: auto;
+        }
+        .account-tab {
+            padding: 6px 14px;
+            border-radius: 20px;
+            background: rgba(33, 38, 45, 0.6);
+            color: #8b949e;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid transparent;
+            transition: all 0.2s;
+        }
+        .account-tab.active {
+            background: rgba(88, 101, 242, 0.2);
+            color: #5865f2;
+            border-color: #5865f2;
+        }
+        .account-tab:hover {
+            background: rgba(48, 54, 61, 0.5);
         }
     </style>
 </head>
@@ -811,6 +624,9 @@
                 <div id="messages-container" class="messages-container"></div>
             </div>
 
+            <!-- СПИСОК АККАУНТОВ -->
+            <div id="accounts-view" class="accounts-list" style="display:none;"></div>
+
             <!-- Профиль -->
             <div id="profile-view" class="profile-section" style="display:none;">
                 <div class="info-card">
@@ -837,7 +653,7 @@
                 <div class="trash-actions">
                     <button class="btn-select-mode" id="select-mode-btn" onclick="toggleSelectMode()">☐ Выбрать</button>
                     <button class="btn-delete-selected" id="delete-selected-btn" onclick="deleteSelectedFromTrash()" style="display:none;">🗑️ Удалить</button>
-                    <button class="btn-clear-all" onclick="clearAllTrash()">🧹 Очистить все</button>
+                    <button class="btn-clear-all" onclick="clearAllTrash()">🧹 Очистить</button>
                     <button class="btn-exit-trash" onclick="toggleTrashMode()">✕</button>
                 </div>
             </div>
@@ -847,6 +663,10 @@
                 <button class="nav-btn active" onclick="switchTab('chats')" id="tab-chats">
                     <span class="nav-icon">💬</span>
                     Чаты
+                </button>
+                <button class="nav-btn" onclick="switchTab('accounts')" id="tab-accounts">
+                    <span class="nav-icon">🔗</span>
+                    Аккаунты
                 </button>
                 <button class="nav-btn" onclick="switchTab('profile')" id="tab-profile">
                     <span class="nav-icon">👤</span>
@@ -876,10 +696,12 @@
         let currentChatId = null;
         let allMessages = [];
         let allChats = [];
+        let allAccounts = [];
         let initData = '';
         let currentTab = 'chats';
         let userId = null;
         let isAdmin = false;
+        let selectedAccountId = null;
 
         // Управление чатами
         let pinnedChats = new Set();
@@ -952,8 +774,15 @@
             document.getElementById('profile-user-id').textContent = userId || 'Неизвестно';
             document.getElementById('profile-status').textContent = isAdmin ? 'Администратор ✅' : 'Пользователь';
 
+            // Загружаем сохранённый аккаунт
+            try {
+                const saved = localStorage.getItem('selected_account');
+                if (saved) selectedAccountId = saved;
+            } catch (e) {}
+
             loadPinnedChats();
             loadTrashChats();
+            loadAccounts();
             loadChats();
         }
 
@@ -963,9 +792,7 @@
         function loadPinnedChats() {
             try {
                 const saved = localStorage.getItem('pinned_chats');
-                if (saved) {
-                    pinnedChats = new Set(JSON.parse(saved));
-                }
+                if (saved) pinnedChats = new Set(JSON.parse(saved));
             } catch (e) {}
         }
 
@@ -978,9 +805,7 @@
         function loadTrashChats() {
             try {
                 const saved = localStorage.getItem('trash_chats');
-                if (saved) {
-                    trashChats = new Set(JSON.parse(saved));
-                }
+                if (saved) trashChats = new Set(JSON.parse(saved));
             } catch (e) {}
         }
 
@@ -991,29 +816,126 @@
         }
 
         // ============================================================
+        //  ЗАГРУЗКА АККАУНТОВ
+        // ============================================================
+        async function loadAccounts() {
+            try {
+                const response = await fetch(`${API_URL}/api/accounts`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ init_data: initData })
+                });
+
+                const data = await response.json();
+                allAccounts = data.accounts || [];
+
+                // Если нет аккаунтов — добавляем дефолтный
+                if (allAccounts.length === 0) {
+                    allAccounts = [{
+                        id: 'default',
+                        name: 'Основной аккаунт',
+                        user_id: userId || 0
+                    }];
+                }
+
+                // Если выбранный аккаунт не существует — выбираем первый
+                if (!allAccounts.some(a => String(a.id) === String(selectedAccountId))) {
+                    selectedAccountId = allAccounts[0]?.id || null;
+                    if (selectedAccountId) {
+                        localStorage.setItem('selected_account', selectedAccountId);
+                    }
+                }
+
+                renderAccounts();
+
+            } catch (e) {
+                console.error('Ошибка загрузки аккаунтов:', e);
+                allAccounts = [{
+                    id: 'default',
+                    name: 'Основной аккаунт',
+                    user_id: userId || 0
+                }];
+                selectedAccountId = 'default';
+                renderAccounts();
+            }
+        }
+
+        function renderAccounts() {
+            const container = document.getElementById('accounts-view');
+            if (!container) return;
+
+            if (allAccounts.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="icon">🔗</div>
+                        <div class="title">Нет аккаунтов</div>
+                        <p style="font-size:13px;">Подключите бизнес-аккаунт через бота</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = allAccounts.map(acc => {
+                const isActive = String(acc.id) === String(selectedAccountId);
+                const name = acc.name || `Аккаунт ${acc.id}`;
+                return `
+                    <div class="account-item ${isActive ? 'active' : ''}" onclick="selectAccount('${acc.id}')">
+                        <div class="account-avatar">${name.charAt(0).toUpperCase()}</div>
+                        <div class="account-info">
+                            <div class="account-name">${name}</div>
+                            <div class="account-id">ID: ${acc.id}</div>
+                        </div>
+                        ${isActive ? '<span class="account-check">✅</span>' : ''}
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function selectAccount(accountId) {
+            if (String(accountId) === String(selectedAccountId)) return;
+            selectedAccountId = accountId;
+            localStorage.setItem('selected_account', accountId);
+            renderAccounts();
+            // Переключаемся на вкладку чатов и загружаем чаты для выбранного аккаунта
+            switchTab('chats');
+            loadChats();
+        }
+
+        // ============================================================
         //  ВКЛАДКИ
         // ============================================================
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
 
+            const chatsList = document.getElementById('chats-list');
+            const messagesView = document.getElementById('messages-view');
+            const profileView = document.getElementById('profile-view');
+            const accountsView = document.getElementById('accounts-view');
+            const trashBanner = document.getElementById('trash-banner');
+
+            // Скрываем всё
+            chatsList.style.display = 'none';
+            messagesView.classList.remove('visible');
+            profileView.style.display = 'none';
+            accountsView.style.display = 'none';
+            trashBanner.style.display = 'none';
+
             if (tab === 'chats') {
                 document.getElementById('tab-chats').classList.add('active');
                 document.getElementById('header-title').textContent = '📱 Переписки';
-                document.getElementById('chats-list').style.display = 'block';
-                document.getElementById('messages-view').classList.remove('visible');
-                document.getElementById('profile-view').style.display = 'none';
-                if (!trashMode) {
-                    document.getElementById('trash-banner').style.display = 'none';
-                }
+                chatsList.style.display = 'block';
+                if (trashMode) trashBanner.style.display = 'flex';
                 loadChats();
+            } else if (tab === 'accounts') {
+                document.getElementById('tab-accounts').classList.add('active');
+                document.getElementById('header-title').textContent = '🔗 Аккаунты';
+                accountsView.style.display = 'block';
+                renderAccounts();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.add('active');
                 document.getElementById('header-title').textContent = '👤 Профиль';
-                document.getElementById('chats-list').style.display = 'none';
-                document.getElementById('messages-view').classList.remove('visible');
-                document.getElementById('profile-view').style.display = 'block';
-                document.getElementById('trash-banner').style.display = 'none';
+                profileView.style.display = 'block';
             }
         }
 
@@ -1033,6 +955,7 @@
             selectedChats.clear();
             selectMode = false;
             document.getElementById('select-mode-btn').textContent = '☐ Выбрать';
+            document.getElementById('select-mode-btn').classList.remove('active');
             document.getElementById('delete-selected-btn').style.display = 'none';
 
             const banner = document.getElementById('trash-banner');
@@ -1091,19 +1014,18 @@
                 return;
             }
 
+            const confirmMsg = `Удалить ${selectedChats.size} чат(ов) навсегда?`;
             if (tg) {
                 tg.showPopup({
                     title: 'Удалить чаты?',
-                    message: `Вы уверены, что хотите удалить ${selectedChats.size} чат(ов)? Это действие необратимо.`,
+                    message: confirmMsg,
                     buttons: [
                         { type: 'cancel', text: 'Отмена' },
                         { type: 'ok', text: 'Удалить', style: 'danger' }
                     ]
                 }, (buttonId) => {
                     if (buttonId === 'ok') {
-                        selectedChats.forEach(chatId => {
-                            trashChats.delete(chatId);
-                        });
+                        selectedChats.forEach(chatId => trashChats.delete(chatId));
                         selectedChats.clear();
                         saveTrashChats();
                         selectMode = false;
@@ -1114,10 +1036,8 @@
                     }
                 });
             } else {
-                if (confirm(`Удалить ${selectedChats.size} чат(ов)?`)) {
-                    selectedChats.forEach(chatId => {
-                        trashChats.delete(chatId);
-                    });
+                if (confirm(confirmMsg)) {
+                    selectedChats.forEach(chatId => trashChats.delete(chatId));
                     selectedChats.clear();
                     saveTrashChats();
                     loadChats();
@@ -1132,28 +1052,25 @@
                 return;
             }
 
+            const confirmMsg = `Удалить ${count} чат(ов) из корзины навсегда?`;
             if (tg) {
                 tg.showPopup({
                     title: 'Очистить корзину?',
-                    message: `Вы уверены, что хотите удалить ${count} чат(ов) из корзины? Это действие необратимо.`,
+                    message: confirmMsg,
                     buttons: [
                         { type: 'cancel', text: 'Отмена' },
                         { type: 'ok', text: 'Очистить всё', style: 'danger' }
                     ]
                 }, (buttonId) => {
                     if (buttonId === 'ok') {
-                        getVisibleChats().forEach(chat => {
-                            trashChats.delete(chat.chat_id);
-                        });
+                        getVisibleChats().forEach(chat => trashChats.delete(chat.chat_id));
                         saveTrashChats();
                         loadChats();
                     }
                 });
             } else {
-                if (confirm(`Очистить корзину (${count} чатов)?`)) {
-                    getVisibleChats().forEach(chat => {
-                        trashChats.delete(chat.chat_id);
-                    });
+                if (confirm(confirmMsg)) {
+                    getVisibleChats().forEach(chat => trashChats.delete(chat.chat_id));
                     saveTrashChats();
                     loadChats();
                 }
@@ -1166,7 +1083,6 @@
         function showContextMenu(e, chatId) {
             e.preventDefault();
             e.stopPropagation();
-
             if (trashMode) return;
 
             contextChatId = chatId;
@@ -1206,10 +1122,11 @@
 
         function moveToTrash() {
             if (contextChatId) {
+                const confirmMsg = 'Переместить чат в корзину?';
                 if (tg) {
                     tg.showPopup({
-                        title: 'Переместить в корзину?',
-                        message: 'Чат будет перемещён в корзину. Вы сможете восстановить его или удалить навсегда.',
+                        title: 'В корзину',
+                        message: confirmMsg,
                         buttons: [
                             { type: 'cancel', text: 'Отмена' },
                             { type: 'ok', text: 'Переместить', style: 'danger' }
@@ -1225,7 +1142,7 @@
                         }
                     });
                 } else {
-                    if (confirm('Переместить чат в корзину?')) {
+                    if (confirm(confirmMsg)) {
                         trashChats.add(contextChatId);
                         pinnedChats.delete(contextChatId);
                         saveTrashChats();
@@ -1237,11 +1154,8 @@
             }
         }
 
-        // Закрытие контекстного меню при клике вне его
         document.addEventListener('click', (e) => {
-            if (!e.target.closest('.context-menu')) {
-                hideContextMenu();
-            }
+            if (!e.target.closest('.context-menu')) hideContextMenu();
         });
 
         // ============================================================
@@ -1252,10 +1166,18 @@
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
 
             try {
+                const requestData = {
+                    init_data: initData
+                };
+                // Если выбран аккаунт — передаём его
+                if (selectedAccountId && selectedAccountId !== 'default') {
+                    requestData.account_id = selectedAccountId;
+                }
+
                 const response = await fetch(`${API_URL}/api/chats`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ init_data: initData })
+                    body: JSON.stringify(requestData)
                 });
 
                 const data = await response.json();
@@ -1286,7 +1208,6 @@
         function renderChats(chats) {
             const container = document.getElementById('chats-list');
 
-            // Сортировка: закреплённые сверху
             const sorted = [...chats].sort((a, b) => {
                 const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
                 const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
@@ -1303,7 +1224,6 @@
                 if (isPinned) statusIcon = '📌';
                 if (isInTrash) statusIcon = '🗑️';
 
-                // В режиме корзины показываем чекбоксы
                 let checkboxHtml = '';
                 if (trashMode && selectMode) {
                     checkboxHtml = `
@@ -1312,7 +1232,6 @@
                     `;
                 }
 
-                // В обычном режиме - долгий клик для контекстного меню
                 const contextAttr = trashMode ? '' : `oncontextmenu="showContextMenu(event, ${chat.chat_id})"`;
 
                 return `
@@ -1350,10 +1269,18 @@
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
 
             try {
+                const requestData = {
+                    chat_id: chatId,
+                    init_data: initData
+                };
+                if (selectedAccountId && selectedAccountId !== 'default') {
+                    requestData.account_id = selectedAccountId;
+                }
+
                 const response = await fetch(`${API_URL}/api/messages`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ chat_id: chatId, init_data: initData })
+                    body: JSON.stringify(requestData)
                 });
 
                 const data = await response.json();
@@ -1515,15 +1442,13 @@
                 alert('🔑 Смена пароля доступна только через Telegram');
                 return;
             }
-
             if (!isAdmin) {
                 tg.showAlert('⛔ Только администраторы могут менять пароль');
                 return;
             }
-
             tg.showPopup({
                 title: '🔑 Смена пароля',
-                message: 'Введите новый пароль для сотрудников (4-20 символов):',
+                message: 'Введите новый пароль (4-20 символов):',
                 buttons: [
                     { type: 'cancel', text: 'Отмена' },
                     { type: 'ok', text: 'Сохранить' }
