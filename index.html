@@ -241,8 +241,8 @@
         <div class="wave"></div>
     </div>
 
-    <!-- ===== ПАРОЛЬ ===== -->
-    <div id="password-screen" class="content password-screen">
+    <!-- ===== ПАРОЛЬ (всегда показывается первым) ===== -->
+    <div id="password-screen" class="content password-screen" style="display:flex;">
         <div class="lock-icon">🔐</div>
         <h2>Введите пароль</h2>
         <p class="sub">Для доступа к перепискам</p>
@@ -327,7 +327,6 @@
         let allMessages = [];
         let currentChatId = null;
         let accountsData = [];
-        let chatsCache = {};
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
 
@@ -398,13 +397,13 @@
         }
 
         // ============================================================
-        // ИНИЦИАЛИЗАЦИЯ
+        // ИНИЦИАЛИЗАЦИЯ (вызывается после ввода пароля)
         // ============================================================
         function initApp() {
             if (!tg || !tg.initData) {
-                document.getElementById('main-screen').classList.add('hidden');
-                document.getElementById('password-screen').style.display = 'flex';
                 document.querySelector('#password-screen .sub').textContent = 'Открой через Telegram';
+                document.getElementById('password-screen').style.display = 'flex';
+                document.getElementById('main-screen').classList.add('hidden');
                 return;
             }
             tg.ready();
@@ -860,18 +859,16 @@
         }
 
         // ============================================================
-        // ЗАПУСК
+        // ЗАПУСК — ВСЕГДА ПОКАЗЫВАЕМ ЭКРАН ПАРОЛЯ
         // ============================================================
         if (tg) {
             tg.ready();
             tg.expand();
         }
 
-        if (window.Telegram?.WebApp?.initData) {
-            document.getElementById('password-screen').style.display = 'none';
-            document.getElementById('main-screen').classList.remove('hidden');
-            initApp();
-        }
+        // Всегда показываем экран пароля
+        document.getElementById('password-screen').style.display = 'flex';
+        document.getElementById('main-screen').classList.add('hidden');
     </script>
 
 </body>
