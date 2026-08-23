@@ -214,6 +214,7 @@
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; }
         .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
         .empty-state .title { font-size: 16px; font-weight: 600; color: #f0f6fc; margin-bottom: 4px; }
+        .empty-state .error { color: #f85149; }
 
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
@@ -364,9 +365,9 @@
         }
 
         // ============================================================
-        // ИНИЦИАЛИЗАЦИЯ
+        // ИНИЦИАЛИЗАЦИЯ (ПОСЛЕДОВАТЕЛЬНАЯ ЗАГРУЗКА)
         // ============================================================
-        function initApp() {
+        async function initApp() {
             if (!tg || !tg.initData) {
                 document.querySelector('#password-screen .sub').textContent = 'Открой через Telegram';
                 document.getElementById('password-screen').style.display = 'flex';
@@ -395,9 +396,9 @@
                 if (saved) selectedAccountId = saved;
             } catch (e) {}
 
-            // Загружаем аккаунты и чаты
-            loadAccounts();
-            loadChats();
+            // ПОСЛЕДОВАТЕЛЬНАЯ ЗАГРУЗКА — сначала аккаунты, потом чаты
+            await loadAccounts();
+            await loadChats();
         }
 
         // ============================================================
@@ -417,6 +418,11 @@
                 });
 
                 const data = await response.json();
+
+                if (data.error) {
+                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
+                    return;
+                }
 
                 if (!data.accounts || data.accounts.length === 0) {
                     container.innerHTML = `
@@ -442,7 +448,7 @@
 
             } catch (e) {
                 console.error('❌ Ошибка загрузки аккаунтов:', e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
+                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
@@ -497,6 +503,13 @@
                 const data = await response.json();
                 console.log('📊 Ответ от чатов:', data);
 
+                // Проверка на ошибку авторизации
+                if (data.error) {
+                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
+                    document.getElementById('chats-count').textContent = '0';
+                    return;
+                }
+
                 if (!data.chats || data.chats.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
@@ -515,7 +528,7 @@
 
             } catch (e) {
                 console.error('❌ Ошибка загрузки чатов:', e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
+                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
@@ -613,6 +626,11 @@
 
                 const data = await response.json();
 
+                if (data.error) {
+                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
+                    return;
+                }
+
                 if (!data.messages || data.messages.length === 0) {
                     container.innerHTML = `
                         <div class="empty-state">
@@ -629,7 +647,7 @@
 
             } catch (e) {
                 console.error('❌ Ошибка:', e);
-                container.innerHTML = `<div class="empty-state"><p>❌ Ошибка загрузки: ${e.message}</p></div>`;
+                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
 
