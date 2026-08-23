@@ -809,7 +809,7 @@
                 return `
                     <div class="chat-item ${isPinned ? 'pinned' : ''}" 
                          data-chat-id="${chat.chat_id}"
-                         onclick="${trashMode ? '' : `loadMessages(${chat.chat_id}, '${displayName}')`}"
+                         onclick="${trashMode ? '' : `openChat('${chat.chat_id}', '${displayName}')`}"
                          ${contextAttr}>
                         ${checkboxHtml}
                         <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
@@ -829,6 +829,210 @@
 
         function refreshChats() {
             loadChats();
+        }
+
+        // ============================================================
+        // ОТКРЫТЬ ЧАТ
+        // ============================================================
+        function openChat(chatId, chatName) {
+            console.log('📂 Открываем чат:', chatId, chatName);
+            currentChatId = chatId;
+            document.getElementById('chat-title').textContent = chatName || 'Чат';
+
+            document.getElementById('chats-list').style.display = 'none';
+            document.getElementById('logs-list').style.display = 'none';
+            document.getElementById('messages-view').classList.add('visible');
+
+            loadMessages(chatId);
+        }
+
+        function backToChats() {
+            document.getElementById('messages-view').classList.remove('visible');
+            document.getElementById('chats-list').style.display = 'block';
+            currentChatId = null;
+            allMessages = [];
+            switchTab('chats');
+        }
+
+        // ============================================================
+        // ЗАГРУЗКА СООБЩЕНИЙ
+        // ============================================================
+        async function loadMessages(chatId) {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
+
+            try {
+                const requestData = { 
+                    chat_id: chatId, 
+                    init_data: initData 
+                };
+                if (selectedAccountId && selectedAccountId !== 'default') {
+                    requestData.account_id = selectedAccountId;
+                }
+
+                console.log('🔍 Запрос сообщений:', requestData);
+
+                const response = await fetch(`${API_URL}/api/messages`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(requestData)
+                });
+
+                const data = await response.json();
+                console.log('📊 Ответ сообщений:', data);
+
+                if (data.error) {
+                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
+                    return;
+                }
+
+                if (!data.messages || data.messages.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <div class="icon">📭</div>
+                            <div class="title">Нет сообщений</div>
+                            <p style="font-size:13px;">В этом чате пока нет сообщений</p>
+                        </div>
+                    `;
+                    return;
+                }
+
+                allMessages = data.messages;
+                renderMessages(allMessages);
+
+            } catch (e) {
+                console.error('❌ Ошибка загрузки сообщений:', e);
+                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
+            }
+        }
+
+        function renderMessages(messages) {
+            const container = document.getElementById('messages-container');
+            container.innerHTML = '';
+
+            let lastSender = null;
+            let msgGroup = [];
+
+            messages.forEach((msg, index) => {
+                const isMine = msg.from_user_name && msg.from_user_name.includes('⁠⁠⁠⁠');
+                const sender = msg.from_user_name || 'Неизвестный';
+
+                if (lastSender !== null && lastSender !== sender) {
+                    flushGroup(container, msgGroup);
+                    msgGroup = [];
+                }
+
+                msgGroup.push({ msg, isMine, sender });
+                lastSender = sender;
+
+                if (index === messages.length - 1) {
+                    flushGroup(container, msgGroup);
+                }
+            });
+
+            container.scrollTop = container.scrollHeight;
+        }
+
+        function flushGroup(container, group) {
+            if (group.length === 0) return;
+
+            const isMine = group[0].isMine;
+            const sender = group[0].sender;
+            const showName = !isMine;
+
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
+            wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
+
+            if (showName) {
+                const nameEl = document.createElement('div');
+                nameEl.className = 'sender-name';
+                nameEl.textContent = sender;
+                wrapper.appendChild(nameEl);
+            }
+
+            group.forEach(({ msg }) => {
+                const bubble = document.createElement('div');
+                let classes = 'msg-bubble';
+
+                const isDeleted = msg.is_deleted || false;
+                const isEdited = msg.edited_at && !isDeleted;
+
+                if (isDeleted) {
+                    classes += ' deleted';
+                    wrapper.classList.add('deleted');
+                } else if (isEdited) {
+                    classes += ' edited';
+                    wrapper.classList.add('edited');
+                }
+
+                bubble.className = classes;
+
+                let content = msg.text_content || '(без текста)';
+                const labels = {
+                    'photo': '📷 Фото',
+                    'video': '🎥 Видео',
+                    'voice': '🎤 Голосовое',
+                    'audio': '🎵 Аудио',
+                    'gif': '🎞️ GIF',
+                    'sticker': '🖼️ Стикер',
+                    'document': '📄 Файл'
+                };
+                if (msg.content_type && msg.content_type !== 'text') {
+                    content = labels[msg.content_type] || msg.content_type;
+                }
+
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+
+                if (isDeleted) {
+                    const deleteIcon = document.createElement('span');
+                    deleteIcon.className = 'delete-icon';
+                    deleteIcon.textContent = '🗑️';
+                    bubble.appendChild(deleteIcon);
+                }
+
+                const timeEl = document.createElement('div');
+                timeEl.className = 'msg-time';
+                const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
+                let timeHtml = timeStr;
+
+                if (isDeleted && msg.deleted_at) {
+                    timeHtml += ` | 🗑️ <span style="color:#f85149;">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
+                }
+
+                timeEl.innerHTML = timeHtml;
+
+                wrapper.appendChild(bubble);
+                wrapper.appendChild(timeEl);
+
+                if (isEdited && msg.original_text) {
+                    const editBlock = document.createElement('div');
+                    editBlock.className = 'edit-block';
+
+                    const oldText = document.createElement('div');
+                    oldText.className = 'old-text';
+                    oldText.textContent = msg.original_text || '(оригинал)';
+
+                    const arrow = document.createElement('div');
+                    arrow.className = 'arrow-down';
+                    arrow.textContent = '⬇️';
+
+                    const newText = document.createElement('div');
+                    newText.className = 'new-text';
+                    newText.textContent = content;
+
+                    editBlock.appendChild(oldText);
+                    editBlock.appendChild(arrow);
+                    editBlock.appendChild(newText);
+
+                    wrapper.appendChild(editBlock);
+                }
+            });
+
+            container.appendChild(wrapper);
         }
 
         // ============================================================
@@ -997,9 +1201,36 @@
             }
         }
 
-        function moveToTrash() {
-            if (contextChatId) {
+        async function moveToTrash() {
+            if (contextChatId && selectedAccountId) {
                 const confirmMsg = 'Переместить чат в корзину?';
+                const doDelete = async () => {
+                    try {
+                        const response = await fetch(`${API_URL}/api/delete_chat`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({
+                                chat_id: contextChatId,
+                                account_id: selectedAccountId,
+                                init_data: initData
+                            })
+                        });
+                        const data = await response.json();
+                        if (data.success) {
+                            trashChats.add(contextChatId);
+                            pinnedChats.delete(contextChatId);
+                            saveTrashChats();
+                            savePinnedChats();
+                            hideContextMenu();
+                            loadChats();
+                        } else {
+                            console.error('Ошибка удаления:', data.error);
+                        }
+                    } catch (e) {
+                        console.error('Ошибка удаления:', e);
+                    }
+                };
+
                 if (tg) {
                     tg.showPopup({
                         title: 'В корзину',
@@ -1009,24 +1240,10 @@
                             { type: 'ok', text: 'Переместить', style: 'danger' }
                         ]
                     }, (buttonId) => {
-                        if (buttonId === 'ok') {
-                            trashChats.add(contextChatId);
-                            pinnedChats.delete(contextChatId);
-                            saveTrashChats();
-                            savePinnedChats();
-                            hideContextMenu();
-                            loadChats();
-                        }
+                        if (buttonId === 'ok') doDelete();
                     });
                 } else {
-                    if (confirm(confirmMsg)) {
-                        trashChats.add(contextChatId);
-                        pinnedChats.delete(contextChatId);
-                        saveTrashChats();
-                        savePinnedChats();
-                        hideContextMenu();
-                        loadChats();
-                    }
+                    if (confirm(confirmMsg)) doDelete();
                 }
             }
         }
@@ -1159,200 +1376,6 @@
                 document.getElementById('header-title').textContent = '👤 Профиль';
                 profileView.style.display = 'block';
             }
-        }
-
-        function backToChats() {
-            document.getElementById('messages-view').classList.remove('visible');
-            document.getElementById('chats-list').style.display = 'block';
-            currentChatId = null;
-            allMessages = [];
-            switchTab('chats');
-        }
-
-        // ============================================================
-        // СООБЩЕНИЯ
-        // ============================================================
-        function openChat(chatId, chatName) {
-            currentChatId = chatId;
-            document.getElementById('chat-title').textContent = chatName || 'Чат';
-
-            document.getElementById('chats-list').style.display = 'none';
-            document.getElementById('logs-list').style.display = 'none';
-            document.getElementById('messages-view').classList.add('visible');
-
-            loadMessages(chatId);
-        }
-
-        async function loadMessages(chatId) {
-            const container = document.getElementById('messages-container');
-            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
-
-            try {
-                const requestData = { chat_id: chatId, init_data: initData };
-                if (selectedAccountId && selectedAccountId !== 'default') {
-                    requestData.account_id = selectedAccountId;
-                }
-
-                const response = await fetch(`${API_URL}/api/messages`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(requestData)
-                });
-
-                const data = await response.json();
-
-                if (data.error) {
-                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
-                    return;
-                }
-
-                if (!data.messages || data.messages.length === 0) {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <div class="icon">📭</div>
-                            <div class="title">Нет сообщений</div>
-                            <p style="font-size:13px;">В этом чате пока нет сообщений</p>
-                        </div>
-                    `;
-                    return;
-                }
-
-                allMessages = data.messages;
-                renderMessages(allMessages);
-
-            } catch (e) {
-                console.error('❌ Ошибка:', e);
-                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
-            }
-        }
-
-        function renderMessages(messages) {
-            const container = document.getElementById('messages-container');
-            container.innerHTML = '';
-
-            let lastSender = null;
-            let msgGroup = [];
-
-            messages.forEach((msg, index) => {
-                const isMine = msg.from_user_name && msg.from_user_name.includes('⁠⁠⁠⁠');
-                const sender = msg.from_user_name || 'Неизвестный';
-
-                if (lastSender !== null && lastSender !== sender) {
-                    flushGroup(container, msgGroup);
-                    msgGroup = [];
-                }
-
-                msgGroup.push({ msg, isMine, sender });
-                lastSender = sender;
-
-                if (index === messages.length - 1) {
-                    flushGroup(container, msgGroup);
-                }
-            });
-
-            container.scrollTop = container.scrollHeight;
-        }
-
-        function flushGroup(container, group) {
-            if (group.length === 0) return;
-
-            const isMine = group[0].isMine;
-            const sender = group[0].sender;
-            const showName = !isMine;
-
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
-            wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
-
-            if (showName) {
-                const nameEl = document.createElement('div');
-                nameEl.className = 'sender-name';
-                nameEl.textContent = sender;
-                wrapper.appendChild(nameEl);
-            }
-
-            group.forEach(({ msg }) => {
-                const bubble = document.createElement('div');
-                let classes = 'msg-bubble';
-
-                const isDeleted = msg.is_deleted || false;
-                const isEdited = msg.edited_at && !isDeleted;
-
-                if (isDeleted) {
-                    classes += ' deleted';
-                    wrapper.classList.add('deleted');
-                } else if (isEdited) {
-                    classes += ' edited';
-                    wrapper.classList.add('edited');
-                }
-
-                bubble.className = classes;
-
-                let content = msg.text_content || '(без текста)';
-                const labels = {
-                    'photo': '📷 Фото',
-                    'video': '🎥 Видео',
-                    'voice': '🎤 Голосовое',
-                    'audio': '🎵 Аудио',
-                    'gif': '🎞️ GIF',
-                    'sticker': '🖼️ Стикер',
-                    'document': '📄 Файл'
-                };
-                if (msg.content_type && msg.content_type !== 'text') {
-                    content = labels[msg.content_type] || msg.content_type;
-                }
-
-                const textSpan = document.createElement('span');
-                textSpan.className = 'msg-text';
-                textSpan.textContent = content;
-                bubble.appendChild(textSpan);
-
-                if (isDeleted) {
-                    const deleteIcon = document.createElement('span');
-                    deleteIcon.className = 'delete-icon';
-                    deleteIcon.textContent = '🗑️';
-                    bubble.appendChild(deleteIcon);
-                }
-
-                const timeEl = document.createElement('div');
-                timeEl.className = 'msg-time';
-                const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
-                let timeHtml = timeStr;
-
-                if (isDeleted && msg.deleted_at) {
-                    timeHtml += ` | 🗑️ <span style="color:#f85149;">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
-                }
-
-                timeEl.innerHTML = timeHtml;
-
-                wrapper.appendChild(bubble);
-                wrapper.appendChild(timeEl);
-
-                if (isEdited && msg.original_text) {
-                    const editBlock = document.createElement('div');
-                    editBlock.className = 'edit-block';
-
-                    const oldText = document.createElement('div');
-                    oldText.className = 'old-text';
-                    oldText.textContent = msg.original_text || '(оригинал)';
-
-                    const arrow = document.createElement('div');
-                    arrow.className = 'arrow-down';
-                    arrow.textContent = '⬇️';
-
-                    const newText = document.createElement('div');
-                    newText.className = 'new-text';
-                    newText.textContent = content;
-
-                    editBlock.appendChild(oldText);
-                    editBlock.appendChild(arrow);
-                    editBlock.appendChild(newText);
-
-                    wrapper.appendChild(editBlock);
-                }
-            });
-
-            container.appendChild(wrapper);
         }
 
         // ============================================================
