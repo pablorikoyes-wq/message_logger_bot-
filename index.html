@@ -1288,48 +1288,45 @@
         }
 
         function renderLogs() {
-            const container = document.getElementById('logs-list');
-            if (!container) return;
+    const container = document.getElementById('logs-list');
+    if (!container) return;
 
-            if (filteredLogs.length === 0) {
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <div class="icon">📭</div>
-                        <div class="title">Нет логов</div>
-                        <p style="font-size:13px;">Сообщения появятся после подключения бота</p>
-                    </div>
-                `;
-                document.getElementById('logs-count').textContent = '0';
-                return;
-            }
+    if (filteredLogs.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="icon">📭</div>
+                <div class="title">Нет логов</div>
+                <p style="font-size:13px;">Сообщения появятся после подключения бота</p>
+            </div>
+        `;
+        return;
+    }
 
-            document.getElementById('logs-count').textContent = filteredLogs.length;
-
-            container.innerHTML = filteredLogs.map(log => {
-                const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
-                const sender = log.from_user_name || 'Неизвестный';
-                const text = log.text_content || '(без текста)';
-                
-                let typeClass = 'normal';
-                let icon = '';
-                if (log.is_deleted) {
-                    typeClass = 'deleted';
-                    icon = '🗑️';
-                } else if (log.edited_at) {
-                    typeClass = 'edited';
-                    icon = '➡️';
-                }
-
-                return `
-                    <div class="log-item ${typeClass}" onclick="openChat(${log.chat_id}, 'Чат')">
-                        <span class="log-time">${time}</span>
-                        <span class="log-sender">${sender}</span>
-                        <span class="log-text">${text}</span>
-                        ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
-                    </div>
-                `;
-            }).join('');
+    container.innerHTML = filteredLogs.map(log => {
+        const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
+        const sender = log.from_user_name || 'Неизвестный';
+        const text = log.text_content || '(без текста)';
+        
+        let typeClass = 'normal';
+        let icon = '';
+        if (log.is_deleted) {
+            typeClass = 'deleted';
+            icon = '🗑️';
+        } else if (log.edited_at) {
+            typeClass = 'edited';
+            icon = '➡️';
         }
+
+        return `
+            <div class="log-item ${typeClass}" onclick="openChat(${log.chat_id}, 'Чат')">
+                <span class="log-time">${time}</span>
+                <span class="log-sender">${sender}</span>
+                <span class="log-text">${text}</span>
+                ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
+            </div>
+        `;
+    }).join('');
+}
 
         // ============================================================
         // ВКЛАДКИ
