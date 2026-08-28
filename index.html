@@ -143,7 +143,6 @@
             color: #5865f2;
         }
         .filter-btn:hover { background: rgba(48, 54, 61, 0.4); }
-
         .search-input {
             flex: 1;
             min-width: 120px;
@@ -166,17 +165,40 @@
             border-bottom: 1px solid rgba(22, 27, 34, 0.5);
             gap: 10px;
             font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
             border-radius: 0;
         }
+        .log-item:hover { background: rgba(22, 27, 34, 0.4); }
         .log-item .log-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
-        .log-item .log-user { color: #f0f6fc; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-        .log-item .log-action { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; font-weight: 500; }
-        .log-item .log-action.connect { color: #3fb950; }
-        .log-item .log-action.disconnect { color: #f85149; }
-        .log-item .log-chats { font-size: 11px; color: #8b949e; flex-shrink: 0; }
+        .log-item .log-sender { color: #8b949e; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .log-item .log-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; }
+        .log-item .log-icon { font-size: 14px; flex-shrink: 0; margin-left: auto; }
+        .log-item .log-icon.edited-icon { color: #d29922; }
+        .log-item .log-icon.deleted-icon { color: #f85149; }
+        .log-item.normal { border-left: 3px solid #3fb950; background: rgba(63, 185, 80, 0.05); }
+        .log-item.edited { border-left: 3px solid #d29922; background: rgba(210, 153, 34, 0.08); }
+        .log-item.deleted { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.08); }
 
-        .log-item.connect { border-left: 3px solid #3fb950; background: rgba(63, 185, 80, 0.05); }
-        .log-item.disconnect { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.05); }
+        /* ===== ЛОГИ ПОДКЛЮЧЕНИЙ ===== */
+        .connections-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .conn-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            gap: 10px;
+            font-size: 13px;
+            border-radius: 0;
+        }
+        .conn-item .conn-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
+        .conn-item .conn-user { color: #f0f6fc; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .conn-item .conn-action { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; font-weight: 500; }
+        .conn-item .conn-action.connect { color: #3fb950; }
+        .conn-item .conn-action.disconnect { color: #f85149; }
+        .conn-item .conn-chats { font-size: 11px; color: #8b949e; flex-shrink: 0; }
+        .conn-item.connect { border-left: 3px solid #3fb950; background: rgba(63, 185, 80, 0.05); }
+        .conn-item.disconnect { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.05); }
 
         .chats-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
         .chat-item {
@@ -283,8 +305,7 @@
         .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
         .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
         .profile-btn {
-            display: flex;
-            align-items: center; gap: 12px; padding: 14px 16px;
+            display: flex; align-items: center; gap: 12px; padding: 14px 16px;
             background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
             border-radius: 12px; color: #f0f6fc; cursor: pointer; transition: all 0.2s;
             width: 100%; text-align: left; font-size: 15px; margin-bottom: 8px;
@@ -420,11 +441,15 @@
             .chat-item .info .last-msg { font-size: 12px; }
             .header { padding: 10px 12px; }
             .header h1 { font-size: 15px; }
-            .log-item .log-user { max-width: 60px; }
+            .log-item .log-sender { max-width: 60px; }
             .log-item .log-time { min-width: 55px; font-size: 10px; }
+            .conn-item .conn-user { max-width: 60px; }
+            .conn-item .conn-time { min-width: 55px; font-size: 10px; }
             .filters { gap: 4px; padding: 6px 10px; }
             .filter-btn { font-size: 10px; padding: 2px 10px; }
             .search-input { font-size: 11px; min-width: 80px; }
+            .bottom-nav .nav-btn { font-size: 10px; }
+            .bottom-nav .nav-btn .nav-icon { font-size: 16px; }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -470,16 +495,19 @@
                 <button class="close-warning" onclick="closeWarning()">✕</button>
             </div>
 
-            <!-- Фильтры с поиском -->
-            <div class="filters" id="filters">
+            <!-- Фильтры для логов подключений -->
+            <div class="filters" id="filters" style="display:flex;">
                 <button class="filter-btn all active" data-filter="all" onclick="setFilter('all')">📋 Все</button>
                 <button class="filter-btn connect active" data-filter="connect" onclick="setFilter('connect')">🟢 Подключения</button>
                 <button class="filter-btn disconnect active" data-filter="disconnect" onclick="setFilter('disconnect')">🔴 Отключения</button>
                 <input class="search-input" id="search-input" placeholder="🔍 Поиск по ID..." oninput="applyFilters()" />
             </div>
 
-            <!-- Логи подключений -->
+            <!-- Логи СООБЩЕНИЙ (старая вкладка) -->
             <div id="logs-list" class="logs-list"></div>
+
+            <!-- Логи ПОДКЛЮЧЕНИЙ (новая вкладка) -->
+            <div id="connections-list" class="connections-list" style="display:none;"></div>
 
             <!-- Чаты -->
             <div id="chats-list" class="chats-list" style="display:none;"></div>
@@ -524,13 +552,16 @@
                 </div>
             </div>
 
-            <!-- Нижняя навигация -->
+            <!-- Нижняя навигация (5 ВКЛАДОК) -->
             <div class="bottom-nav">
                 <button class="nav-btn active" onclick="switchTab('logs')" id="tab-logs">
                     <span class="nav-icon">📋</span> Логи
                 </button>
                 <button class="nav-btn" onclick="switchTab('chats')" id="tab-chats">
                     <span class="nav-icon">💬</span> Чаты
+                </button>
+                <button class="nav-btn" onclick="switchTab('connections')" id="tab-connections">
+                    <span class="nav-icon">🔌</span> Подключения
                 </button>
                 <button class="nav-btn" onclick="switchTab('accounts')" id="tab-accounts">
                     <span class="nav-icon">🔗</span> Аккаунты
@@ -565,7 +596,7 @@
         let allChats = [];
         let allLogs = [];
         let filteredLogs = [];
-        let activeFilters = { all: true, connect: true, disconnect: true };
+        let activeFilters = { all: true, normal: true, edited: true, deleted: true };
         let allMessages = [];
         let currentChatId = null;
         let accountsData = [];
@@ -575,6 +606,9 @@
         let selectMode = false;
         let trashMode = false;
         let contextChatId = null;
+        let connectionLogs = [];
+        let filteredConnectionLogs = [];
+        let connActiveFilters = { all: true, connect: true, disconnect: true };
         let searchQuery = '';
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
@@ -719,8 +753,6 @@
         // ============================================================
         // ЛОГИ ПОДКЛЮЧЕНИЙ
         // ============================================================
-        let connectionLogs = [];
-
         async function loadConnectionLogs() {
             try {
                 const response = await fetch(`${API_URL}/api/connection_logs`, {
@@ -731,11 +763,11 @@
                 const data = await response.json();
                 if (data.error || !data.logs) {
                     connectionLogs = [];
-                    renderLogs();
+                    renderConnectionLogs();
                     return;
                 }
                 connectionLogs = data.logs;
-                applyFilters();
+                applyConnFilters();
                 checkWarnings();
             } catch (e) {
                 console.error('Ошибка загрузки логов подключений:', e);
@@ -746,7 +778,6 @@
             const banner = document.getElementById('warning-banner');
             const text = document.getElementById('warning-text');
             
-            // Проверяем последние отключения (за последние 24 часа)
             const now = Date.now();
             const recentDisconnects = connectionLogs.filter(log => {
                 if (log.action !== 'disconnect') return false;
@@ -769,79 +800,68 @@
         }
 
         // ============================================================
-        // ФИЛЬТРЫ
+        // ФИЛЬТРЫ ДЛЯ ЛОГОВ ПОДКЛЮЧЕНИЙ
         // ============================================================
         function setFilter(filter) {
             const btn = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
             if (!btn) return;
             btn.classList.toggle('active');
-            activeFilters[filter] = btn.classList.contains('active');
+            connActiveFilters[filter] = btn.classList.contains('active');
             
-            // Если все фильтры активны — "Все" тоже активен
             const allActive = document.querySelectorAll('.filter-btn:not([data-filter="all"])');
             const allChecked = Array.from(allActive).every(b => b.classList.contains('active'));
             document.querySelector('.filter-btn[data-filter="all"]').classList.toggle('active', allChecked);
-            activeFilters.all = allChecked;
+            connActiveFilters.all = allChecked;
             
-            applyFilters();
+            applyConnFilters();
         }
 
-        function applyFilters() {
+        function applyConnFilters() {
             const searchInput = document.getElementById('search-input');
             searchQuery = searchInput.value.toLowerCase().trim();
             
-            const showConnect = activeFilters.connect;
-            const showDisconnect = activeFilters.disconnect;
+            const showConnect = connActiveFilters.connect;
+            const showDisconnect = connActiveFilters.disconnect;
 
-            filteredLogs = connectionLogs.filter(log => {
-                // Фильтр по типу
+            filteredConnectionLogs = connectionLogs.filter(log => {
                 if (log.action === 'connect' && !showConnect) return false;
                 if (log.action === 'disconnect' && !showDisconnect) return false;
-                
-                // Поиск по user_id
                 if (searchQuery) {
                     const userIdStr = String(log.user_id);
                     if (!userIdStr.includes(searchQuery)) return false;
                 }
-                
                 return true;
             });
 
-            renderLogs();
+            renderConnectionLogs();
         }
 
-        // ============================================================
-        // ОТРИСОВКА ЛОГОВ
-        // ============================================================
-        function renderLogs() {
-            const container = document.getElementById('logs-list');
+        function renderConnectionLogs() {
+            const container = document.getElementById('connections-list');
             if (!container) return;
 
-            if (filteredLogs.length === 0) {
+            if (filteredConnectionLogs.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов подключений</div><p style="font-size:13px;">История подключений будет отображаться здесь</p></div>`;
-                document.getElementById('chats-count').textContent = '0';
                 return;
             }
 
-            document.getElementById('chats-count').textContent = filteredLogs.length;
-
-            container.innerHTML = filteredLogs.map(log => {
+            container.innerHTML = filteredConnectionLogs.map(log => {
                 const time = log.timestamp ? new Date(log.timestamp).toLocaleString('ru-RU') : '';
                 const actionText = log.action === 'connect' ? '🟢 Подключился' : '🔴 Отключился';
                 const actionClass = log.action === 'connect' ? 'connect' : 'disconnect';
                 const chatCount = log.chat_count ? `📊 ${log.chat_count} чатов` : '';
 
-                return `<div class="log-item ${actionClass}">
-                    <span class="log-time">${time}</span>
-                    <span class="log-user">👤 ${log.user_id}</span>
-                    <span class="log-action ${actionClass}">${actionText}</span>
-                    <span class="log-chats">${chatCount}</span>
+                return `<div class="conn-item ${actionClass}">
+                    <span class="conn-time">${time}</span>
+                    <span class="conn-user">👤 ${log.user_id}</span>
+                    <span class="conn-action ${actionClass}">${actionText}</span>
+                    <span class="conn-chats">${chatCount}</span>
                 </div>`;
             }).join('');
         }
 
         // ============================================================
-        // ЗАГРУЗКА ЛОГОВ СООБЩЕНИЙ (для вкладки "Логи")
+        // ЗАГРУЗКА ЛОГОВ СООБЩЕНИЙ (старая вкладка)
         // ============================================================
         async function loadAllLogs() {
             try {
@@ -853,16 +873,57 @@
                 const data = await response.json();
                 if (data.error || !data.messages || data.messages.length === 0) {
                     allLogs = [];
-                    renderMessageLogs();
+                    renderLogs();
                     return;
                 }
                 allLogs = data.messages;
-                renderMessageLogs();
+                applyMessageFilters();
             } catch (e) { console.error(e); }
         }
 
-        function renderMessageLogs() {
-            // Для вкладки "Логи сообщений" - сейчас не используется, но оставляем
+        function applyMessageFilters() {
+            const showNormal = true;
+            const showEdited = true;
+            const showDeleted = true;
+            filteredLogs = allLogs.filter(log => {
+                if (log.is_deleted && !showDeleted) return false;
+                if (log.edited_at && !showEdited) return false;
+                if (!log.is_deleted && !log.edited_at && !showNormal) return false;
+                return true;
+            });
+            renderLogs();
+        }
+
+        function renderLogs() {
+            const container = document.getElementById('logs-list');
+            if (!container) return;
+            if (filteredLogs.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов</div><p style="font-size:13px;">Сообщения появятся после подключения бота</p></div>`;
+                return;
+            }
+            container.innerHTML = filteredLogs.map(log => {
+                const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
+                const sender = log.from_user_name || 'Неизвестный';
+                let text = log.text_content || '(без текста)';
+                let typeClass = 'normal';
+                let icon = '';
+                let originalText = '';
+                if (log.is_deleted) {
+                    typeClass = 'deleted';
+                    icon = '🗑️';
+                    text = log.original_text || log.text_content || '(удалено)';
+                } else if (log.edited_at && log.original_text && log.original_text !== log.text_content) {
+                    typeClass = 'edited';
+                    icon = '➡️';
+                    originalText = log.original_text;
+                }
+                return `<div class="log-item ${typeClass}" onclick="openChat('${log.chat_id}', 'Чат')">
+                    <span class="log-time">${time}</span>
+                    <span class="log-sender">${sender}</span>
+                    <span class="log-text">${typeClass === 'edited' ? `<span style="color:#8b949e;text-decoration:line-through;">${originalText}</span> → ` : ''}${text}</span>
+                    ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
+                </div>`;
+            }).join('');
         }
 
         // ============================================================
@@ -1168,6 +1229,7 @@
             currentChatId = chatId;
             document.getElementById('chat-title').textContent = chatName || 'Чат';
             document.getElementById('logs-list').style.display = 'none';
+            document.getElementById('connections-list').style.display = 'none';
             document.getElementById('chats-list').style.display = 'none';
             document.getElementById('messages-view').classList.add('visible');
             loadMessages(chatId);
@@ -1177,10 +1239,10 @@
             document.getElementById('messages-view').classList.remove('visible');
             if (currentTab === 'logs') {
                 document.getElementById('logs-list').style.display = 'block';
-                document.getElementById('chats-list').style.display = 'none';
+            } else if (currentTab === 'connections') {
+                document.getElementById('connections-list').style.display = 'block';
             } else {
                 document.getElementById('chats-list').style.display = 'block';
-                document.getElementById('logs-list').style.display = 'none';
             }
         }
 
@@ -1309,29 +1371,33 @@
         // ============================================================
         function refreshAll() {
             if (currentTab === 'logs') {
-                loadConnectionLogs();
                 loadAllLogs();
             } else if (currentTab === 'chats') {
                 loadChats();
+            } else if (currentTab === 'connections') {
+                loadConnectionLogs();
             } else if (currentTab === 'accounts') {
                 loadAccounts();
             }
         }
 
         // ============================================================
-        // ВКЛАДКИ
+        // ВКЛАДКИ (5 ШТУК)
         // ============================================================
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const logsList = document.getElementById('logs-list');
+            const connectionsList = document.getElementById('connections-list');
             const chatsList = document.getElementById('chats-list');
             const messagesView = document.getElementById('messages-view');
             const accountsView = document.getElementById('accounts-view');
             const profileView = document.getElementById('profile-view');
             const trashBanner = document.getElementById('trash-banner');
             const filters = document.getElementById('filters');
+            
             logsList.style.display = 'none';
+            connectionsList.style.display = 'none';
             chatsList.style.display = 'none';
             messagesView.classList.remove('visible');
             accountsView.style.display = 'none';
@@ -1341,25 +1407,34 @@
             
             if (tab === 'logs') {
                 document.getElementById('tab-logs').classList.add('active');
-                document.getElementById('header-title').textContent = '📋 Логи подключений';
+                document.getElementById('header-title').textContent = '📋 Логи сообщений';
                 logsList.style.display = 'block';
-                filters.style.display = 'flex';
-                loadConnectionLogs();
+                filters.style.display = 'none';
+                loadAllLogs();
             } else if (tab === 'chats') {
                 document.getElementById('tab-chats').classList.add('active');
                 document.getElementById('header-title').textContent = '💬 Чаты';
                 chatsList.style.display = 'block';
                 if (trashMode) trashBanner.style.display = 'flex';
+                filters.style.display = 'none';
                 loadChats();
+            } else if (tab === 'connections') {
+                document.getElementById('tab-connections').classList.add('active');
+                document.getElementById('header-title').textContent = '🔌 Подключения';
+                connectionsList.style.display = 'block';
+                filters.style.display = 'flex';
+                loadConnectionLogs();
             } else if (tab === 'accounts') {
                 document.getElementById('tab-accounts').classList.add('active');
                 document.getElementById('header-title').textContent = '🔗 Аккаунты';
                 accountsView.style.display = 'block';
+                filters.style.display = 'none';
                 loadAccounts();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.add('active');
                 document.getElementById('header-title').textContent = '👤 Профиль';
                 profileView.style.display = 'block';
+                filters.style.display = 'none';
             }
         }
 
@@ -1381,7 +1456,7 @@
         if (tg) { tg.ready(); tg.expand(); }
         document.getElementById('password-screen').style.display = 'flex';
         document.getElementById('main-screen').classList.add('hidden');
-        document.getElementById('filters').style.display = 'flex';
+        document.getElementById('filters').style.display = 'none';
     </script>
 
 </body>
