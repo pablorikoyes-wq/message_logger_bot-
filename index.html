@@ -100,12 +100,13 @@
         .password-screen .error { color: #f85149; margin-top: 10px; font-size: 14px; min-height: 24px; }
         .hidden { display: none !important; }
 
-        .app-container { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+        .app-container { flex: 1; display: flex; flex-direction: column; min-height: 0; height: 100vh; }
         .header {
             display: flex; align-items: center; justify-content: space-between;
             padding: 12px 16px; background: rgba(22, 27, 34, 0.8);
             border-bottom: 1px solid rgba(33, 38, 45, 0.5); flex-shrink: 0;
             backdrop-filter: blur(10px);
+            z-index: 10;
         }
         .header h1 { font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #f0f6fc, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .header .badge { background: linear-gradient(135deg, #5865f2, #4752c4); color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
@@ -123,6 +124,8 @@
             border-bottom: 1px solid rgba(33, 38, 45, 0.3);
             flex-shrink: 0;
             overflow-x: auto;
+            flex-wrap: wrap;
+            z-index: 10;
         }
         .filter-btn {
             padding: 4px 14px;
@@ -142,8 +145,21 @@
             color: #5865f2;
         }
         .filter-btn:hover { background: rgba(48, 54, 61, 0.4); }
+        .search-input {
+            flex: 1;
+            min-width: 120px;
+            padding: 4px 12px;
+            border-radius: 16px;
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            background: rgba(22, 27, 34, 0.8);
+            color: #f0f6fc;
+            font-size: 12px;
+            outline: none;
+        }
+        .search-input:focus { border-color: #5865f2; }
+        .search-input::placeholder { color: #8b949e; }
 
-        .logs-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .logs-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
         .log-item {
             display: flex;
             align-items: center;
@@ -165,6 +181,25 @@
         .log-item.normal { border-left: 3px solid #3fb950; background: rgba(63, 185, 80, 0.05); }
         .log-item.edited { border-left: 3px solid #d29922; background: rgba(210, 153, 34, 0.08); }
         .log-item.deleted { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.08); }
+
+        .connections-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
+        .conn-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            gap: 10px;
+            font-size: 13px;
+            border-radius: 0;
+        }
+        .conn-item .conn-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
+        .conn-item .conn-user { color: #f0f6fc; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .conn-item .conn-action { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; font-weight: 500; }
+        .conn-item .conn-action.connect { color: #3fb950; }
+        .conn-item .conn-action.disconnect { color: #f85149; }
+        .conn-item .conn-chats { font-size: 11px; color: #8b949e; flex-shrink: 0; }
+        .conn-item.connect { border-left: 3px solid #3fb950; background: rgba(63, 185, 80, 0.05); }
+        .conn-item.disconnect { border-left: 3px solid #f85149; background: rgba(248, 81, 73, 0.05); }
 
         .chats-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
         .chat-item {
@@ -232,7 +267,7 @@
         .context-menu .danger { color: #f85149; }
         .context-menu .success { color: #3fb950; }
 
-        .accounts-list { flex: 1; overflow-y: auto; padding: 8px 0; }
+        .accounts-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
         .account-item {
             display: flex;
             align-items: center;
@@ -260,7 +295,7 @@
         .account-item .account-status.online { background: rgba(46, 160, 67, 0.2); color: #3fb950; }
         .account-item .account-status.offline { background: rgba(248, 81, 73, 0.2); color: #f85149; }
 
-        .profile-section { flex: 1; overflow-y: auto; padding: 16px; }
+        .profile-section { flex: 1; overflow-y: auto; padding: 16px; min-height: 0; }
         .profile-section .info-card {
             background: rgba(22, 27, 34, 0.8);
             border-radius: 12px;
@@ -271,20 +306,10 @@
         .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
         .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
         .profile-btn {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 14px 16px;
-            background: rgba(22, 27, 34, 0.8);
-            border: 1px solid rgba(48, 54, 61, 0.5);
-            border-radius: 12px;
-            color: #f0f6fc;
-            cursor: pointer;
-            transition: all 0.2s;
-            width: 100%;
-            text-align: left;
-            font-size: 15px;
-            margin-bottom: 8px;
+            display: flex; align-items: center; gap: 12px; padding: 14px 16px;
+            background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 12px; color: #f0f6fc; cursor: pointer; transition: all 0.2s;
+            width: 100%; text-align: left; font-size: 15px; margin-bottom: 8px;
         }
         .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
         .profile-btn .icon { font-size: 20px; }
@@ -328,11 +353,23 @@
         .bottom-nav .nav-btn:hover { color: #f0f6fc; }
         .bottom-nav .nav-btn .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
 
-        .messages-view { flex: 1; display: none; flex-direction: column; }
+        .messages-view {
+            flex: 1;
+            display: none;
+            flex-direction: column;
+            min-height: 0;
+            height: 100%;
+        }
         .messages-view.visible { display: flex; }
         .messages-container {
-            flex: 1; overflow-y: auto; padding: 8px 12px;
-            display: flex; flex-direction: column; gap: 2px;
+            flex: 1;
+            overflow-y: auto;
+            padding: 8px 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            min-height: 0;
+            height: 100%;
         }
         .msg-wrapper { display: flex; flex-direction: column; max-width: 100%; }
         .msg-wrapper .sender-name { font-size: 11px; color: #8b949e; margin-bottom: 1px; padding-left: 10px; }
@@ -360,6 +397,7 @@
             justify-content: space-between;
             border-top: 1px solid rgba(42, 26, 26, 0.5);
             flex-shrink: 0;
+            z-index: 10;
         }
         .trash-banner.visible { display: flex; }
         .trash-banner span { color: #f85149; font-weight: 600; font-size: 13px; }
@@ -384,6 +422,28 @@
         .trash-banner .btn-delete-selected:hover { background: rgba(248, 81, 73, 0.15) !important; }
         .trash-banner .btn-exit-trash { color: #8b949e !important; }
 
+        .warning-banner {
+            background: rgba(248, 81, 73, 0.15);
+            border-left: 4px solid #f85149;
+            padding: 10px 16px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+            flex-shrink: 0;
+            font-size: 13px;
+            color: #f85149;
+            z-index: 10;
+        }
+        .warning-banner.visible { display: flex; }
+        .warning-banner .close-warning {
+            background: none;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 16px;
+            margin-left: auto;
+        }
+
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
@@ -398,6 +458,13 @@
             .header h1 { font-size: 15px; }
             .log-item .log-sender { max-width: 60px; }
             .log-item .log-time { min-width: 55px; font-size: 10px; }
+            .conn-item .conn-user { max-width: 60px; }
+            .conn-item .conn-time { min-width: 55px; font-size: 10px; }
+            .filters { gap: 4px; padding: 6px 10px; }
+            .filter-btn { font-size: 10px; padding: 2px 10px; }
+            .search-input { font-size: 11px; min-width: 80px; }
+            .bottom-nav .nav-btn { font-size: 10px; }
+            .bottom-nav .nav-btn .nav-icon { font-size: 16px; }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -413,7 +480,6 @@
         <div class="wave"></div>
     </div>
 
-    <!-- ===== ПАРОЛЬ ===== -->
     <div id="password-screen" class="content password-screen" style="display:flex;">
         <div class="lock-icon">🔐</div>
         <h2>Введите пароль</h2>
@@ -424,7 +490,6 @@
         <div id="login-error" class="error"></div>
     </div>
 
-    <!-- ===== ОСНОВНОЙ ИНТЕРФЕЙС ===== -->
     <div id="main-screen" class="content hidden">
         <div class="app-container">
             <div class="header">
@@ -436,21 +501,23 @@
                 </div>
             </div>
 
-            <!-- Фильтры -->
-            <div class="filters" id="filters">
-                <button class="filter-btn all active" data-filter="all" onclick="setFilter('all')">📋 Все</button>
-                <button class="filter-btn normal active" data-filter="normal" onclick="setFilter('normal')">💬 Обычные</button>
-                <button class="filter-btn edited active" data-filter="edited" onclick="setFilter('edited')">✏️ Ред.</button>
-                <button class="filter-btn deleted active" data-filter="deleted" onclick="setFilter('deleted')">🗑️ Удал.</button>
+            <div class="warning-banner" id="warning-banner">
+                <span>⚠️</span>
+                <span id="warning-text">Было обнаружено отключение бота! Возможна потеря сообщений.</span>
+                <button class="close-warning" onclick="closeWarning()">✕</button>
             </div>
 
-            <!-- Логи -->
-            <div id="logs-list" class="logs-list"></div>
+            <div class="filters" id="filters" style="display:flex;">
+                <button class="filter-btn all active" data-filter="all" onclick="setFilter('all')">📋 Все</button>
+                <button class="filter-btn connect active" data-filter="connect" onclick="setFilter('connect')">🟢 Подключения</button>
+                <button class="filter-btn disconnect active" data-filter="disconnect" onclick="setFilter('disconnect')">🔴 Отключения</button>
+                <input class="search-input" id="search-input" placeholder="🔍 Поиск по ID..." oninput="applyConnFilters()" />
+            </div>
 
-            <!-- Чаты -->
+            <div id="logs-list" class="logs-list"></div>
+            <div id="connections-list" class="connections-list" style="display:none;"></div>
             <div id="chats-list" class="chats-list" style="display:none;"></div>
 
-            <!-- Сообщения -->
             <div id="messages-view" class="messages-view">
                 <div class="header" style="border-bottom: none; padding: 8px 16px;">
                     <button class="back-btn" onclick="backToChats()">← Назад</button>
@@ -460,10 +527,8 @@
                 <div id="messages-container" class="messages-container"></div>
             </div>
 
-            <!-- Аккаунты -->
             <div id="accounts-view" class="accounts-list" style="display:none;"></div>
 
-            <!-- Профиль -->
             <div id="profile-view" class="profile-section" style="display:none;">
                 <div class="info-card">
                     <div class="label">Ваш ID</div>
@@ -479,7 +544,6 @@
                 </button>
             </div>
 
-            <!-- Корзина -->
             <div id="trash-banner" class="trash-banner">
                 <span>🗑️ Корзина</span>
                 <div class="trash-actions">
@@ -490,13 +554,15 @@
                 </div>
             </div>
 
-            <!-- Нижняя навигация -->
             <div class="bottom-nav">
                 <button class="nav-btn active" onclick="switchTab('logs')" id="tab-logs">
                     <span class="nav-icon">📋</span> Логи
                 </button>
                 <button class="nav-btn" onclick="switchTab('chats')" id="tab-chats">
                     <span class="nav-icon">💬</span> Чаты
+                </button>
+                <button class="nav-btn" onclick="switchTab('connections')" id="tab-connections">
+                    <span class="nav-icon">🔌</span> Подключения
                 </button>
                 <button class="nav-btn" onclick="switchTab('accounts')" id="tab-accounts">
                     <span class="nav-icon">🔗</span> Аккаунты
@@ -509,7 +575,6 @@
         </div>
     </div>
 
-    <!-- ===== КОНТЕКСТНОЕ МЕНЮ ===== -->
     <div class="context-menu" id="context-menu">
         <button onclick="pinChat()" id="pin-btn">📌 Закрепить</button>
         <button onclick="unpinChat()" id="unpin-btn" style="display:none;">📌 Открепить</button>
@@ -517,9 +582,6 @@
     </div>
 
     <script>
-        // ============================================================
-        // КОНФИГ
-        // ============================================================
         const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
         const APP_PASSWORD = '166734';
 
@@ -531,7 +593,6 @@
         let allChats = [];
         let allLogs = [];
         let filteredLogs = [];
-        let activeFilters = { all: true, normal: true, edited: true, deleted: true };
         let allMessages = [];
         let currentChatId = null;
         let accountsData = [];
@@ -541,17 +602,17 @@
         let selectMode = false;
         let trashMode = false;
         let contextChatId = null;
+        let connectionLogs = [];
+        let filteredConnectionLogs = [];
+        let connActiveFilters = { all: true, connect: true, disconnect: true };
+        let searchQuery = '';
 
         try { tg = window.Telegram?.WebApp; } catch (e) {}
 
-        // ============================================================
-        // АВТОРИЗАЦИЯ
-        // ============================================================
         function login() {
             const input = document.getElementById('password-input');
             const error = document.getElementById('login-error');
             const password = input.value.trim();
-
             if (password === APP_PASSWORD) {
                 error.textContent = '';
                 document.getElementById('password-screen').style.display = 'none';
@@ -576,9 +637,6 @@
             }
         }
 
-        // ============================================================
-        // ИНИЦИАЛИЗАЦИЯ
-        // ============================================================
         async function initApp() {
             if (!tg || !tg.initData) {
                 document.querySelector('#password-screen .sub').textContent = 'Открой через Telegram';
@@ -612,13 +670,12 @@
             } catch (e) {}
 
             await loadAccounts();
+            await loadConnectionLogs();
             await loadAllLogs();
             await loadChats();
+            checkWarnings();
         }
 
-        // ============================================================
-        // ЗАГРУЗКА/СОХРАНЕНИЕ
-        // ============================================================
         function loadPinnedChats() {
             try { const saved = localStorage.getItem('pinned_chats'); if (saved) pinnedChats = new Set(JSON.parse(saved)); } catch (e) {}
         }
@@ -632,9 +689,6 @@
             try { localStorage.setItem('trash_chats', JSON.stringify(Array.from(trashChats))); } catch (e) {}
         }
 
-        // ============================================================
-        // АККАУНТЫ — ВСЕ БИЗНЕС-АККАУНТЫ ИЗ БАЗЫ
-        // ============================================================
         async function loadAccounts() {
             const container = document.getElementById('accounts-view');
             if (!container) return;
@@ -679,52 +733,101 @@
             }).join('');
         }
 
-        // ============================================================
-        // ФИЛЬТРЫ
-        // ============================================================
+        async function loadConnectionLogs() {
+            try {
+                const response = await fetch(`${API_URL}/api/connection_logs`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ init_data: initData })
+                });
+                const data = await response.json();
+                if (data.error || !data.logs) {
+                    connectionLogs = [];
+                    renderConnectionLogs();
+                    return;
+                }
+                connectionLogs = data.logs;
+                applyConnFilters();
+                checkWarnings();
+            } catch (e) {
+                console.error('Ошибка загрузки логов подключений:', e);
+            }
+        }
+
+        function checkWarnings() {
+            const banner = document.getElementById('warning-banner');
+            const text = document.getElementById('warning-text');
+            const now = Date.now();
+            const recentDisconnects = connectionLogs.filter(log => {
+                if (log.action !== 'disconnect') return false;
+                const logTime = new Date(log.timestamp).getTime();
+                return (now - logTime) < 24 * 60 * 60 * 1000;
+            });
+            if (recentDisconnects.length > 0) {
+                const last = recentDisconnects[0];
+                const time = new Date(last.timestamp).toLocaleString('ru-RU');
+                text.textContent = `⚠️ Было обнаружено отключение бота ${time}. Возможна потеря сообщений (было чатов: ${last.chat_count || 0})`;
+                banner.classList.add('visible');
+            } else {
+                banner.classList.remove('visible');
+            }
+        }
+
+        function closeWarning() {
+            document.getElementById('warning-banner').classList.remove('visible');
+        }
+
         function setFilter(filter) {
             const btn = document.querySelector(`.filter-btn[data-filter="${filter}"]`);
             if (!btn) return;
-            if (filter === 'all') {
-                const allActive = activeFilters.all;
-                activeFilters.all = !allActive;
-                document.querySelectorAll('.filter-btn').forEach(b => {
-                    if (b.dataset.filter !== 'all') {
-                        b.classList.toggle('active', activeFilters.all);
-                        activeFilters[b.dataset.filter] = activeFilters.all;
-                    }
-                });
-                btn.classList.toggle('active');
-                document.querySelectorAll('.filter-btn:not([data-filter="all"])').forEach(b => {
-                    b.classList.toggle('active', activeFilters.all);
-                });
-            } else {
-                btn.classList.toggle('active');
-                activeFilters[filter] = btn.classList.contains('active');
-                const allActive = document.querySelectorAll('.filter-btn:not([data-filter="all"])');
-                const allChecked = Array.from(allActive).every(b => b.classList.contains('active'));
-                document.querySelector('.filter-btn[data-filter="all"]').classList.toggle('active', allChecked);
-                activeFilters.all = allChecked;
-            }
-            applyFilters();
+            btn.classList.toggle('active');
+            connActiveFilters[filter] = btn.classList.contains('active');
+            const allActive = document.querySelectorAll('.filter-btn:not([data-filter="all"])');
+            const allChecked = Array.from(allActive).every(b => b.classList.contains('active'));
+            document.querySelector('.filter-btn[data-filter="all"]').classList.toggle('active', allChecked);
+            connActiveFilters.all = allChecked;
+            applyConnFilters();
         }
 
-        function applyFilters() {
-            const showNormal = activeFilters.normal;
-            const showEdited = activeFilters.edited;
-            const showDeleted = activeFilters.deleted;
-            filteredLogs = allLogs.filter(log => {
-                if (log.is_deleted && !showDeleted) return false;
-                if (log.edited_at && !showEdited) return false;
-                if (!log.is_deleted && !log.edited_at && !showNormal) return false;
+        function applyConnFilters() {
+            const searchInput = document.getElementById('search-input');
+            searchQuery = searchInput.value.toLowerCase().trim();
+            const showConnect = connActiveFilters.connect;
+            const showDisconnect = connActiveFilters.disconnect;
+            filteredConnectionLogs = connectionLogs.filter(log => {
+                if (log.action === 'connect' && !showConnect) return false;
+                if (log.action === 'disconnect' && !showDisconnect) return false;
+                if (searchQuery) {
+                    const userIdStr = String(log.user_id);
+                    if (!userIdStr.includes(searchQuery)) return false;
+                }
                 return true;
             });
-            renderLogs();
+            renderConnectionLogs();
         }
 
-        // ============================================================
-        // ЛОГИ
-        // ============================================================
+        function renderConnectionLogs() {
+            const container = document.getElementById('connections-list');
+            if (!container) return;
+            if (filteredConnectionLogs.length === 0) {
+                container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов подключений</div><p style="font-size:13px;">История подключений будет отображаться здесь</p></div>`;
+                return;
+            }
+            container.innerHTML = filteredConnectionLogs.map(log => {
+                const time = log.timestamp ? new Date(log.timestamp).toLocaleString('ru-RU') : '';
+                const actionText = log.action === 'connect' ? '🟢 Подключился' : '🔴 Отключился';
+                const actionClass = log.action === 'connect' ? 'connect' : 'disconnect';
+                const chatCount = log.chat_count ? `📊 ${log.chat_count} чатов` : '';
+                const userDisplay = log.user_id || 'Неизвестно';
+                return `<div class="conn-item ${actionClass}">
+                    <span class="conn-time">${time}</span>
+                    <span class="conn-user">👤 ${userDisplay}</span>
+                    <span class="conn-action ${actionClass}">${actionText}</span>
+                    <span class="conn-chats">${chatCount}</span>
+                </div>`;
+            }).join('');
+        }
+
         async function loadAllLogs() {
             try {
                 const response = await fetch(`${API_URL}/api/all_messages`, {
@@ -735,25 +838,22 @@
                 const data = await response.json();
                 if (data.error || !data.messages || data.messages.length === 0) {
                     allLogs = [];
-                    filteredLogs = [];
                     renderLogs();
                     return;
                 }
                 allLogs = data.messages;
-                applyFilters();
+                renderLogs();
             } catch (e) { console.error(e); }
         }
 
         function renderLogs() {
             const container = document.getElementById('logs-list');
             if (!container) return;
-            if (filteredLogs.length === 0) {
+            if (allLogs.length === 0) {
                 container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов</div><p style="font-size:13px;">Сообщения появятся после подключения бота</p></div>`;
-                document.getElementById('chats-count').textContent = '0';
                 return;
             }
-            document.getElementById('chats-count').textContent = filteredLogs.length;
-            container.innerHTML = filteredLogs.map(log => {
+            container.innerHTML = allLogs.map(log => {
                 const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
                 const sender = log.from_user_name || 'Неизвестный';
                 let text = log.text_content || '(без текста)';
@@ -778,9 +878,6 @@
             }).join('');
         }
 
-        // ============================================================
-        // ЧАТЫ
-        // ============================================================
         function getVisibleChats() {
             if (trashMode) {
                 return allChats.filter(chat => trashChats.has(chat.chat_id));
@@ -854,9 +951,6 @@
             }).join('');
         }
 
-        // ============================================================
-        // КОРЗИНА
-        // ============================================================
         function toggleTrashMode() {
             trashMode = !trashMode;
             selectedChats.clear();
@@ -868,13 +962,9 @@
             if (trashMode) {
                 banner.style.display = 'flex';
                 document.getElementById('trash-btn').style.color = '#f85149';
-                document.getElementById('header-title').textContent = '🗑️ Корзина';
-                document.getElementById('trash-btn').textContent = '📋';
             } else {
                 banner.style.display = 'none';
                 document.getElementById('trash-btn').style.color = '#8b949e';
-                document.getElementById('header-title').textContent = '📋 Логи';
-                document.getElementById('trash-btn').textContent = '🗑️';
             }
             loadChats();
         }
@@ -938,7 +1028,6 @@
                 saveTrashChats();
                 savePinnedChats();
                 loadChats();
-                loadAllLogs();
                 if (tg) tg.showAlert(`✅ Удалено ${success} чат(ов)`);
             };
             if (tg) {
@@ -985,7 +1074,6 @@
                 saveTrashChats();
                 savePinnedChats();
                 loadChats();
-                loadAllLogs();
                 if (tg) tg.showAlert(`✅ Очищено ${success} чат(ов)`);
             };
             if (tg) {
@@ -999,9 +1087,6 @@
             }
         }
 
-        // ============================================================
-        // КОНТЕКСТНОЕ МЕНЮ
-        // ============================================================
         function showContextMenu(e, chatId) {
             e.preventDefault();
             e.stopPropagation();
@@ -1061,7 +1146,6 @@
                             savePinnedChats();
                             hideContextMenu();
                             loadChats();
-                            loadAllLogs();
                         }
                     } catch (e) { console.error(e); }
                 };
@@ -1081,13 +1165,11 @@
             if (!e.target.closest('.context-menu')) hideContextMenu();
         });
 
-        // ============================================================
-        // ОТКРЫТЬ ЧАТ
-        // ============================================================
         function openChat(chatId, chatName) {
             currentChatId = chatId;
             document.getElementById('chat-title').textContent = chatName || 'Чат';
             document.getElementById('logs-list').style.display = 'none';
+            document.getElementById('connections-list').style.display = 'none';
             document.getElementById('chats-list').style.display = 'none';
             document.getElementById('messages-view').classList.add('visible');
             loadMessages(chatId);
@@ -1097,18 +1179,13 @@
             document.getElementById('messages-view').classList.remove('visible');
             if (currentTab === 'logs') {
                 document.getElementById('logs-list').style.display = 'block';
-                document.getElementById('chats-list').style.display = 'none';
-                loadAllLogs();
+            } else if (currentTab === 'connections') {
+                document.getElementById('connections-list').style.display = 'block';
             } else {
                 document.getElementById('chats-list').style.display = 'block';
-                document.getElementById('logs-list').style.display = 'none';
-                loadChats();
             }
         }
 
-        // ============================================================
-        // СООБЩЕНИЯ
-        // ============================================================
         async function loadMessages(chatId) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
@@ -1152,8 +1229,11 @@
                 }
                 msgGroup.push({ msg, isMine, sender });
                 lastSender = sender;
-                if (index === messages.length - 1) flushGroup(container, msgGroup);
+                if (index === messages.length - 1) {
+                    flushGroup(container, msgGroup);
+                }
             });
+            // ===== АВТОПРОКРУТКА ВНИЗ =====
             container.scrollTop = container.scrollHeight;
         }
 
@@ -1224,64 +1304,76 @@
                 }
             });
             container.appendChild(wrapper);
+            // ===== АВТОПРОКРУТКА ВНИЗ =====
+            container.scrollTop = container.scrollHeight;
         }
 
-        // ============================================================
-        // ОБНОВЛЕНИЕ
-        // ============================================================
         function refreshAll() {
-            if (currentTab === 'logs') loadAllLogs();
-            else if (currentTab === 'chats') loadChats();
-            else if (currentTab === 'accounts') loadAccounts();
+            if (currentTab === 'logs') {
+                loadAllLogs();
+            } else if (currentTab === 'chats') {
+                loadChats();
+            } else if (currentTab === 'connections') {
+                loadConnectionLogs();
+            } else if (currentTab === 'accounts') {
+                loadAccounts();
+            }
         }
 
-        // ============================================================
-        // ВКЛАДКИ
-        // ============================================================
         function switchTab(tab) {
             currentTab = tab;
             document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
             const logsList = document.getElementById('logs-list');
+            const connectionsList = document.getElementById('connections-list');
             const chatsList = document.getElementById('chats-list');
             const messagesView = document.getElementById('messages-view');
             const accountsView = document.getElementById('accounts-view');
             const profileView = document.getElementById('profile-view');
             const trashBanner = document.getElementById('trash-banner');
             const filters = document.getElementById('filters');
+            
             logsList.style.display = 'none';
+            connectionsList.style.display = 'none';
             chatsList.style.display = 'none';
             messagesView.classList.remove('visible');
             accountsView.style.display = 'none';
             profileView.style.display = 'none';
             trashBanner.style.display = 'none';
             filters.style.display = 'none';
+            
             if (tab === 'logs') {
                 document.getElementById('tab-logs').classList.add('active');
-                document.getElementById('header-title').textContent = '📋 Логи';
+                document.getElementById('header-title').textContent = '📋 Логи сообщений';
                 logsList.style.display = 'block';
-                filters.style.display = 'flex';
+                filters.style.display = 'none';
                 loadAllLogs();
             } else if (tab === 'chats') {
                 document.getElementById('tab-chats').classList.add('active');
                 document.getElementById('header-title').textContent = '💬 Чаты';
                 chatsList.style.display = 'block';
                 if (trashMode) trashBanner.style.display = 'flex';
+                filters.style.display = 'none';
                 loadChats();
+            } else if (tab === 'connections') {
+                document.getElementById('tab-connections').classList.add('active');
+                document.getElementById('header-title').textContent = '🔌 Подключения';
+                connectionsList.style.display = 'block';
+                filters.style.display = 'flex';
+                loadConnectionLogs();
             } else if (tab === 'accounts') {
                 document.getElementById('tab-accounts').classList.add('active');
                 document.getElementById('header-title').textContent = '🔗 Аккаунты';
                 accountsView.style.display = 'block';
+                filters.style.display = 'none';
                 loadAccounts();
             } else if (tab === 'profile') {
                 document.getElementById('tab-profile').classList.add('active');
                 document.getElementById('header-title').textContent = '👤 Профиль';
                 profileView.style.display = 'block';
+                filters.style.display = 'none';
             }
         }
 
-        // ============================================================
-        // ПРОФИЛЬ
-        // ============================================================
         function logoutFromApp() {
             if (tg) tg.close();
             else {
@@ -1291,13 +1383,10 @@
             }
         }
 
-        // ============================================================
-        // ЗАПУСК
-        // ============================================================
         if (tg) { tg.ready(); tg.expand(); }
         document.getElementById('password-screen').style.display = 'flex';
         document.getElementById('main-screen').classList.add('hidden');
-        document.getElementById('filters').style.display = 'flex';
+        document.getElementById('filters').style.display = 'none';
     </script>
 
 </body>
