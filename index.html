@@ -1301,103 +1301,241 @@
         }
 
         function flushGroup(container, group) {
-            if (group.length === 0) return;
+    if (group.length === 0) return;
 
-            const isMine = group[0].isMine;
-            const sender = group[0].sender;
-            const showName = !isMine;
+    const isMine = group[0].isMine;
+    const sender = group[0].sender;
+    const showName = !isMine;
 
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
-            wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
+    wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
 
-            if (showName) {
-                const nameEl = document.createElement('div');
-                nameEl.className = 'sender-name';
-                nameEl.textContent = sender;
-                wrapper.appendChild(nameEl);
-            }
+    if (showName) {
+        const nameEl = document.createElement('div');
+        nameEl.className = 'sender-name';
+        nameEl.textContent = sender;
+        wrapper.appendChild(nameEl);
+    }
 
-            group.forEach(({ msg }) => {
-                const bubble = document.createElement('div');
-                let classes = 'msg-bubble';
+    group.forEach(({ msg }) => {
+        const bubble = document.createElement('div');
+        let classes = 'msg-bubble';
 
-                const isDeleted = msg.is_deleted || false;
-                const isEdited = msg.edited_at && msg.original_text && !isDeleted;
+        const isDeleted = msg.is_deleted || false;
+        const isEdited = msg.edited_at && msg.original_text && !isDeleted;
 
-                // Добавляем цветовые метки
-                if (isDeleted) {
-                    classes += ' deleted-msg';
-                    wrapper.classList.add('deleted');
-                } else if (isEdited) {
-                    classes += ' edited-msg';
-                    wrapper.classList.add('edited');
-                } else {
-                    classes += ' normal-msg';
-                }
+        if (isDeleted) {
+            classes += ' deleted-msg';
+            wrapper.classList.add('deleted');
+        } else if (isEdited) {
+            classes += ' edited-msg';
+            wrapper.classList.add('edited');
+        } else {
+            classes += ' normal-msg';
+        }
 
-                bubble.className = classes;
+        bubble.className = classes;
 
-                let content = msg.text_content || '(без текста)';
-                const labels = {
-                    'photo': '📷 Фото',
-                    'video': '🎥 Видео',
-                    'voice': '🎤 Голосовое',
-                    'audio': '🎵 Аудио',
-                    'gif': '🎞️ GIF',
-                    'sticker': '🖼️ Стикер',
-                    'document': '📄 Файл'
-                };
-                if (msg.content_type && msg.content_type !== 'text') {
-                    content = labels[msg.content_type] || msg.content_type;
-                }
+        // ===== ОТОБРАЖЕНИЕ МЕДИАФАЙЛОВ =====
+        const labels = {
+            'photo': '📷 Фото',
+            'video': '🎥 Видео',
+            'voice': '🎤 Голосовое',
+            'audio': '🎵 Аудио',
+            'gif': '🎞️ GIF',
+            'sticker': '🖼️ Стикер',
+            'document': '📄 Файл'
+        };
 
+        let content = msg.text_content || '';
+
+        // Для фото показываем превью
+        if (msg.content_type === 'photo' && msg.file_url) {
+            // Текст перед фото
+            if (content) {
                 const textSpan = document.createElement('span');
                 textSpan.className = 'msg-text';
                 textSpan.textContent = content;
                 bubble.appendChild(textSpan);
-
-                if (isDeleted) {
-                    const deleteIcon = document.createElement('span');
-                    deleteIcon.className = 'delete-icon';
-                    deleteIcon.textContent = '🗑️';
-                    bubble.appendChild(deleteIcon);
-                }
-
-                const timeEl = document.createElement('div');
-                timeEl.className = 'msg-time';
-                const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
-                let timeHtml = timeStr;
-                if (isDeleted && msg.deleted_at) {
-                    timeHtml += ` | 🗑️ <span style="color:#f85149;">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
-                }
-                timeEl.innerHTML = timeHtml;
-
-                wrapper.appendChild(bubble);
-                wrapper.appendChild(timeEl);
-
-                if (isEdited && msg.original_text) {
-                    const editBlock = document.createElement('div');
-                    editBlock.className = 'edit-block';
-                    const oldText = document.createElement('div');
-                    oldText.className = 'old-text';
-                    oldText.textContent = msg.original_text || '(оригинал)';
-                    const arrow = document.createElement('div');
-                    arrow.className = 'arrow-down';
-                    arrow.textContent = '⬇️';
-                    const newText = document.createElement('div');
-                    newText.className = 'new-text';
-                    newText.textContent = content;
-                    editBlock.appendChild(oldText);
-                    editBlock.appendChild(arrow);
-                    editBlock.appendChild(newText);
-                    wrapper.appendChild(editBlock);
-                }
-            });
-
-            container.appendChild(wrapper);
-            container.scrollTop = container.scrollHeight;
+                // Добавляем перенос
+                bubble.appendChild(document.createElement('br'));
+            }
+            
+            const img = document.createElement('img');
+            // Используем локальный сервер для файлов
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            img.src = fileUrl;
+            img.style.maxWidth = '200px';
+            img.style.maxHeight = '200px';
+            img.style.borderRadius = '8px';
+            img.style.marginTop = '4px';
+            img.style.cursor = 'pointer';
+            img.alt = 'Фото';
+            img.onclick = function() {
+                window.open(fileUrl, '_blank');
+            };
+            // Обработка ошибок загрузки
+            img.onerror = function() {
+                this.style.display = 'none';
+                const fallback = document.createElement('span');
+                fallback.textContent = '📷 Фото (не удалось загрузить)';
+                fallback.style.color = '#8b949e';
+                fallback.style.fontSize = '12px';
+                this.parentNode.appendChild(fallback);
+            };
+            bubble.appendChild(img);
+        } 
+        // Для GIF показываем анимацию
+        else if (msg.content_type === 'gif' && msg.file_url) {
+            if (content) {
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+                bubble.appendChild(document.createElement('br'));
+            }
+            
+            const video = document.createElement('video');
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            video.src = fileUrl;
+            video.style.maxWidth = '200px';
+            video.style.maxHeight = '200px';
+            video.style.borderRadius = '8px';
+            video.style.marginTop = '4px';
+            video.controls = true;
+            video.autoplay = true;
+            video.loop = true;
+            video.muted = true;
+            video.playsInline = true;
+            bubble.appendChild(video);
         }
+        // Для видео
+        else if (msg.content_type === 'video' && msg.file_url) {
+            if (content) {
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+                bubble.appendChild(document.createElement('br'));
+            }
+            
+            const video = document.createElement('video');
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            video.src = fileUrl;
+            video.style.maxWidth = '200px';
+            video.style.maxHeight = '200px';
+            video.style.borderRadius = '8px';
+            video.style.marginTop = '4px';
+            video.controls = true;
+            video.playsInline = true;
+            bubble.appendChild(video);
+        }
+        // Для голосовых и аудио
+        else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && msg.file_url) {
+            if (content) {
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content;
+                bubble.appendChild(textSpan);
+                bubble.appendChild(document.createElement('br'));
+            }
+            
+            const audio = document.createElement('audio');
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            audio.src = fileUrl;
+            audio.style.width = '100%';
+            audio.style.maxWidth = '200px';
+            audio.style.marginTop = '4px';
+            audio.controls = true;
+            bubble.appendChild(audio);
+        }
+        // Для стикеров
+        else if (msg.content_type === 'sticker' && msg.file_url) {
+            const img = document.createElement('img');
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            img.src = fileUrl;
+            img.style.maxWidth = '128px';
+            img.style.maxHeight = '128px';
+            img.style.borderRadius = '8px';
+            img.style.marginTop = '4px';
+            img.alt = 'Стикер';
+            bubble.appendChild(img);
+        }
+        // Для документов
+        else if (msg.content_type === 'document' && msg.file_url) {
+            const fileUrl = msg.file_url.startsWith('http') ? msg.file_url : `http://localhost:8081${msg.file_url}`;
+            const fileName = fileUrl.split('/').pop() || 'документ';
+            const fileLink = document.createElement('a');
+            fileLink.href = fileUrl;
+            fileLink.target = '_blank';
+            fileLink.textContent = `📄 ${fileName}`;
+            fileLink.style.color = '#5865f2';
+            fileLink.style.textDecoration = 'underline';
+            if (content) {
+                const textSpan = document.createElement('span');
+                textSpan.className = 'msg-text';
+                textSpan.textContent = content + ' ';
+                bubble.appendChild(textSpan);
+            }
+            bubble.appendChild(fileLink);
+        }
+        // Обычный текст
+        else {
+            // Для текстовых сообщений с типом photo/video/etc но без файла
+            if (msg.content_type && msg.content_type !== 'text' && labels[msg.content_type]) {
+                content = labels[msg.content_type] + (content ? ': ' + content : '');
+            }
+            const textSpan = document.createElement('span');
+            textSpan.className = 'msg-text';
+            textSpan.textContent = content || '(без текста)';
+            bubble.appendChild(textSpan);
+        }
+
+        // Если удалено, добавляем иконку удаления
+        if (isDeleted) {
+            const deleteIcon = document.createElement('span');
+            deleteIcon.className = 'delete-icon';
+            deleteIcon.textContent = '🗑️';
+            bubble.appendChild(deleteIcon);
+        }
+
+        // Время
+        const timeEl = document.createElement('div');
+        timeEl.className = 'msg-time';
+        const timeStr = msg.sent_at ? new Date(msg.sent_at).toLocaleString('ru-RU') : '';
+        let timeHtml = timeStr;
+        if (isDeleted && msg.deleted_at) {
+            timeHtml += ` | 🗑️ <span style="color:#f85149;">Удалено ${new Date(msg.deleted_at).toLocaleString('ru-RU')}</span>`;
+        }
+        timeEl.innerHTML = timeHtml;
+
+        wrapper.appendChild(bubble);
+        wrapper.appendChild(timeEl);
+
+        // Блок редактирования
+        if (isEdited && msg.original_text) {
+            const editBlock = document.createElement('div');
+            editBlock.className = 'edit-block';
+            const oldText = document.createElement('div');
+            oldText.className = 'old-text';
+            oldText.textContent = msg.original_text || '(оригинал)';
+            const arrow = document.createElement('div');
+            arrow.className = 'arrow-down';
+            arrow.textContent = '⬇️';
+            const newText = document.createElement('div');
+            newText.className = 'new-text';
+            newText.textContent = content || msg.text_content || '(без текста)';
+            editBlock.appendChild(oldText);
+            editBlock.appendChild(arrow);
+            editBlock.appendChild(newText);
+            wrapper.appendChild(editBlock);
+        }
+    });
+
+    container.appendChild(wrapper);
+    container.scrollTop = container.scrollHeight;
+}
 
         // ============================================================
         // ВКЛАДКИ
