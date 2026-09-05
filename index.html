@@ -303,6 +303,7 @@
         .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
         .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
         .profile-section .info-card .value.admin-badge { color: #5865f2; font-size: 13px; }
+        .profile-section .info-card .value.owner-badge { color: #d29922; font-size: 13px; }
         .profile-btn {
             display: flex; align-items: center; gap: 12px; padding: 14px 16px;
             background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
@@ -340,6 +341,10 @@
             transition: all 0.2s;
         }
         .admin-input-group button:hover { background: #4752c4; }
+        .admin-input-group button:disabled {
+            background: #30363d;
+            cursor: not-allowed;
+        }
         .admin-list {
             margin-top: 8px;
             max-height: 150px;
@@ -356,6 +361,7 @@
         }
         .admin-item .admin-name { font-size: 14px; color: #f0f6fc; }
         .admin-item .admin-id { font-size: 12px; color: #8b949e; }
+        .admin-item .admin-owner-badge { font-size: 11px; color: #d29922; margin-left: 6px; }
         .admin-item .remove-admin {
             background: none;
             border: none;
@@ -365,6 +371,10 @@
             padding: 4px;
         }
         .admin-item .remove-admin:hover { color: #ff6b6b; }
+        .admin-item .remove-admin:disabled {
+            color: #30363d;
+            cursor: not-allowed;
+        }
 
         .bottom-nav {
             display: flex;
@@ -628,9 +638,9 @@
                 <div class="info-card" id="admin-section" style="display:none;">
                     <div class="label">👑 Администраторы</div>
                     <div class="admin-list" id="admin-list"></div>
-                    <div class="admin-input-group">
+                    <div class="admin-input-group" id="admin-input-group">
                         <input type="number" id="admin-id-input" placeholder="Введите ID пользователя" />
-                        <button onclick="addAdmin()">➕ Добавить</button>
+                        <button id="add-admin-btn" onclick="addAdmin()">➕ Добавить</button>
                     </div>
                 </div>
                 <button class="profile-btn" onclick="logoutFromApp()">
@@ -683,7 +693,7 @@
         const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
         const FILES_URL = 'http://localhost:8081';
         const APP_PASSWORD = '166734';
-        const DEFAULT_ADMINS = [5709389268, 8038746319];
+        const OWNER_ADMINS = [5709389268, 8038746319];
 
         let tg = null;
         let initData = '';
@@ -705,6 +715,7 @@
         let connectionLogs = [];
         let filteredConnectionLogs = [];
         let isAdmin = false;
+        let isOwner = false;
         let admins = [];
         let accountChats = [];
         let selectedAccountInfo = null;
@@ -807,13 +818,15 @@
                 if (saved) {
                     admins = JSON.parse(saved);
                 } else {
-                    admins = [...DEFAULT_ADMINS];
+                    admins = [...OWNER_ADMINS];
                     saveAdmins();
                 }
                 isAdmin = admins.includes(Number(userId));
+                isOwner = OWNER_ADMINS.includes(Number(userId));
             } catch (e) {
-                admins = [...DEFAULT_ADMINS];
+                admins = [...OWNER_ADMINS];
                 isAdmin = admins.includes(Number(userId));
+                isOwner = OWNER_ADMINS.includes(Number(userId));
                 saveAdmins();
             }
         }
@@ -828,15 +841,30 @@
             return admins.includes(Number(userId));
         }
 
+        function isUserOwner(userId) {
+            return OWNER_ADMINS.includes(Number(userId));
+        }
+
         function updateProfile() {
             const statusEl = document.getElementById('profile-status');
             const adminSection = document.getElementById('admin-section');
+            const adminInputGroup = document.getElementById('admin-input-group');
+            const addBtn = document.getElementById('add-admin-btn');
             
             if (isAdmin) {
-                statusEl.textContent = '👑 Администратор';
-                statusEl.className = 'value admin-badge';
+                statusEl.textContent = isOwner ? '👑 Владелец' : '👑 Администратор';
+                statusEl.className = 'value ' + (isOwner ? 'owner-badge' : 'admin-badge');
                 adminSection.style.display = 'block';
                 renderAdmins();
+                
+                // Только владельцы могут добавлять/удалять админов
+                if (isOwner) {
+                    adminInputGroup.style.display = 'flex';
+                    addBtn.disabled = false;
+                } else {
+                    adminInputGroup.style.display = 'none';
+                    addBtn.disabled = true;
+                }
             } else {
                 statusEl.textContent = '👤 Пользователь';
                 statusEl.className = 'value';
@@ -852,12 +880,16 @@
             }
             container.innerHTML = admins.map(id => {
                 const isCurrent = Number(id) === Number(userId);
+                const isOwnerUser = OWNER_ADMINS.includes(Number(id));
+                const canRemove = isOwner && !isOwnerUser && !isCurrent;
+                
                 return `<div class="admin-item">
                     <div>
-                        <span class="admin-name">${isCurrent ? '👑 ' : ''}${id}</span>
+                        <span class="admin-name">${isOwnerUser ? '👑 ' : ''}${id}</span>
                         <span class="admin-id">${isCurrent ? '(Вы)' : ''}</span>
+                        ${isOwnerUser ? '<span class="admin-owner-badge">(Владелец)</span>' : ''}
                     </div>
-                    ${!isCurrent ? `<button class="remove-admin" onclick="removeAdmin(${id})">✕</button>` : ''}
+                    ${canRemove ? `<button class="remove-admin" onclick="removeAdmin(${id})">✕</button>` : ''}
                 </div>`;
             }).join('');
         }
@@ -888,6 +920,11 @@
         }
 
         function addAdmin() {
+            if (!isOwner) {
+                if (tg) tg.showAlert('Только владельцы могут добавлять администраторов');
+                return;
+            }
+            
             const input = document.getElementById('admin-id-input');
             const id = input.value.trim();
             if (!id || isNaN(id)) {
@@ -899,20 +936,31 @@
                 if (tg) tg.showAlert('Этот пользователь уже администратор');
                 return;
             }
+            if (OWNER_ADMINS.includes(numId)) {
+                if (tg) tg.showAlert('Этот пользователь уже владелец');
+                return;
+            }
             admins.push(numId);
             saveAdmins();
             renderAdmins();
             input.value = '';
             
-            // Отправляем уведомление новому админу
             notifyNewAdmin(numId, userId || 'Неизвестный');
             
             if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
         }
 
         function removeAdmin(id) {
+            if (!isOwner) {
+                if (tg) tg.showAlert('Только владельцы могут удалять администраторов');
+                return;
+            }
             if (Number(id) === Number(userId)) {
                 if (tg) tg.showAlert('Вы не можете удалить себя из администраторов');
+                return;
+            }
+            if (OWNER_ADMINS.includes(Number(id))) {
+                if (tg) tg.showAlert('Нельзя удалить владельца');
                 return;
             }
             admins = admins.filter(a => Number(a) !== Number(id));
