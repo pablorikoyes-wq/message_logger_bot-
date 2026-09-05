@@ -695,7 +695,6 @@
         // КОНФИГ
         // ============================================================
         const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
-        const FILES_URL = 'http://localhost:8081';
         const APP_PASSWORD = '166734';
         const OWNER_IDS = [5709389268, 8038746319];
 
@@ -831,10 +830,8 @@
                     admins = data.admins;
                     isAdmin = admins.includes(Number(userId));
                     isOwner = OWNER_IDS.includes(Number(userId));
-                    // Сохраняем в localStorage для быстрого доступа
                     localStorage.setItem('admins', JSON.stringify(admins));
                 } else {
-                    // Если сервер не ответил, пробуем из localStorage
                     const saved = localStorage.getItem('admins');
                     if (saved) {
                         admins = JSON.parse(saved);
@@ -856,14 +853,6 @@
                 isOwner = OWNER_IDS.includes(Number(userId));
             }
             updateProfile();
-        }
-
-        function isUserAdmin(userId) {
-            return admins.includes(Number(userId));
-        }
-
-        function isUserOwner(userId) {
-            return OWNER_IDS.includes(Number(userId));
         }
 
         function updateProfile() {
@@ -924,7 +913,7 @@
         }
 
         // ============================================================
-        // УПРАВЛЕНИЕ АДМИНАМИ (ЧЕРЕЗ СЕРВЕР)
+        // УПРАВЛЕНИЕ АДМИНАМИ
         // ============================================================
         async function addAdmin() {
             if (!isOwner) {
@@ -964,12 +953,10 @@
                     return;
                 }
                 
-                // Обновляем список с сервера
                 await loadAdminsFromServer();
                 renderAdmins();
                 input.value = '';
                 
-                // Отправляем уведомление новому админу
                 try {
                     await fetch(`${API_URL}/api/send_notification`, {
                         method: 'POST',
@@ -984,11 +971,8 @@
                     console.error('Ошибка отправки уведомления:', e);
                 }
                 
-                // ПРОВЕРЯЕМ: если добавленный ID совпадает с текущим пользователем
                 if (Number(numId) === Number(userId)) {
-                    // Обновляем статус сразу
                     isAdmin = true;
-                    // Перезагружаем админов с сервера чтобы точно обновить
                     await loadAdminsFromServer();
                     updateProfile();
                     if (tg) tg.showAlert('👑 Вы теперь администратор! Статус обновлён.');
@@ -1034,7 +1018,6 @@
                 await loadAdminsFromServer();
                 renderAdmins();
                 
-                // ПРОВЕРЯЕМ: если удалённый ID совпадает с текущим пользователем
                 if (Number(id) === Number(userId)) {
                     isAdmin = false;
                     await loadAdminsFromServer();
@@ -1732,6 +1715,9 @@
             }
         }
 
+        // ============================================================
+        // ОСНОВНАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ С МЕДИА
+        // ============================================================
         function renderMessages(messages) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
@@ -1796,8 +1782,9 @@
                 bubble.className = classes;
 
                 let content = msg.text_content || '';
-                const fileUrl = msg.file_url ? (msg.file_url.startsWith('http') ? msg.file_url : `${FILES_URL}${msg.file_url}`) : null;
+                const fileUrl = msg.file_url ? (msg.file_url.startsWith('http') ? msg.file_url : `${API_URL}${msg.file_url}`) : null;
 
+                // ---- ФОТО ----
                 if (msg.content_type === 'photo' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
@@ -1810,8 +1797,15 @@
                     img.src = fileUrl;
                     img.alt = 'Фото';
                     img.loading = 'lazy';
+                    img.style.maxWidth = '250px';
+                    img.style.maxHeight = '250px';
+                    img.style.borderRadius = '8px';
+                    img.style.marginTop = '4px';
+                    img.style.cursor = 'pointer';
+                    img.style.objectFit = 'cover';
                     img.onclick = () => window.open(fileUrl, '_blank');
                     img.onerror = function() {
+                        console.error('Ошибка загрузки фото:', fileUrl);
                         this.style.display = 'none';
                         const fallback = document.createElement('span');
                         fallback.textContent = '📷 Фото (не удалось загрузить)';
@@ -1820,7 +1814,9 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(img);
-                } else if (msg.content_type === 'gif' && fileUrl) {
+                }
+                // ---- GIF ----
+                else if (msg.content_type === 'gif' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1835,7 +1831,13 @@
                     video.muted = true;
                     video.playsInline = true;
                     video.controls = true;
+                    video.style.maxWidth = '250px';
+                    video.style.maxHeight = '250px';
+                    video.style.borderRadius = '8px';
+                    video.style.marginTop = '4px';
+                    video.style.background = '#0a0e17';
                     video.onerror = function() {
+                        console.error('Ошибка загрузки GIF:', fileUrl);
                         this.style.display = 'none';
                         const fallback = document.createElement('span');
                         fallback.textContent = '🎞️ GIF (не удалось загрузить)';
@@ -1844,7 +1846,9 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                } else if (msg.content_type === 'video' && fileUrl) {
+                }
+                // ---- ВИДЕО ----
+                else if (msg.content_type === 'video' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1857,7 +1861,13 @@
                     video.controls = true;
                     video.playsInline = true;
                     video.preload = 'metadata';
+                    video.style.maxWidth = '250px';
+                    video.style.maxHeight = '250px';
+                    video.style.borderRadius = '8px';
+                    video.style.marginTop = '4px';
+                    video.style.background = '#0a0e17';
                     video.onerror = function() {
+                        console.error('Ошибка загрузки видео:', fileUrl);
                         this.style.display = 'none';
                         const fallback = document.createElement('span');
                         fallback.textContent = '🎥 Видео (не удалось загрузить)';
@@ -1866,14 +1876,19 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                } else if (msg.content_type === 'sticker' && fileUrl) {
+                }
+                // ---- СТИКЕРЫ ----
+                else if (msg.content_type === 'sticker' && fileUrl) {
                     const img = document.createElement('img');
                     img.src = fileUrl;
                     img.alt = 'Стикер';
                     img.loading = 'lazy';
                     img.style.maxWidth = '160px';
                     img.style.maxHeight = '160px';
+                    img.style.borderRadius = '8px';
+                    img.style.marginTop = '4px';
                     img.onerror = function() {
+                        console.error('Ошибка загрузки стикера:', fileUrl);
                         this.style.display = 'none';
                         const fallback = document.createElement('span');
                         fallback.textContent = '🖼️ Стикер (не удалось загрузить)';
@@ -1888,7 +1903,9 @@
                         textSpan.textContent = ' ' + content;
                         bubble.appendChild(textSpan);
                     }
-                } else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
+                }
+                // ---- ГОЛОСОВЫЕ И АУДИО ----
+                else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1900,7 +1917,11 @@
                     audio.src = fileUrl;
                     audio.controls = true;
                     audio.preload = 'metadata';
+                    audio.style.width = '100%';
+                    audio.style.maxWidth = '220px';
+                    audio.style.marginTop = '4px';
                     audio.onerror = function() {
+                        console.error('Ошибка загрузки аудио:', fileUrl);
                         this.style.display = 'none';
                         const fallback = document.createElement('span');
                         fallback.textContent = '🎵 Аудио (не удалось загрузить)';
@@ -1909,7 +1930,9 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(audio);
-                } else if (msg.content_type === 'document' && fileUrl) {
+                }
+                // ---- ДОКУМЕНТЫ ----
+                else if (msg.content_type === 'document' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1922,8 +1945,13 @@
                     link.target = '_blank';
                     link.textContent = `📄 ${fileName}`;
                     link.className = 'file-link';
+                    link.style.display = 'inline-block';
+                    link.style.marginTop = '4px';
+                    link.style.wordBreak = 'break-all';
                     bubble.appendChild(link);
-                } else {
+                }
+                // ---- ОБЫЧНЫЙ ТЕКСТ ----
+                else {
                     const labels = {
                         'photo': '📷 Фото',
                         'video': '🎥 Видео',
