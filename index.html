@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>Переписки</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
@@ -16,6 +16,9 @@
             margin: 0;
             overflow: hidden;
             position: relative;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
         }
         .waves {
             position: fixed;
@@ -161,6 +164,9 @@
             cursor: pointer;
             transition: all 0.2s;
             border-radius: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .log-item:hover { background: rgba(22, 27, 34, 0.4); }
         .log-item .log-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
@@ -182,6 +188,9 @@
             gap: 10px;
             font-size: 13px;
             border-radius: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .conn-item .conn-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
         .conn-item .conn-user { color: #f0f6fc; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -204,6 +213,9 @@
             position: relative;
             user-select: none;
             border-radius: 0;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .chat-item:hover { background: rgba(22, 27, 34, 0.5); }
         .chat-item.pinned { border-left: 3px solid #5865f2; background: rgba(88, 101, 242, 0.05); }
@@ -267,6 +279,9 @@
             transition: all 0.2s;
             border-bottom: 1px solid rgba(22, 27, 34, 0.5);
             gap: 14px;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .account-item:hover { background: rgba(22, 27, 34, 0.5); }
         .account-item .account-avatar {
@@ -399,6 +414,9 @@
             cursor: pointer;
             transition: all 0.2s;
             position: relative;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+            min-height: 44px;
         }
         .bottom-nav .nav-btn.active { color: #5865f2; }
         .bottom-nav .nav-btn.active::after {
@@ -561,6 +579,9 @@
                 max-height: 200px;
             }
             .admin-input-group { flex-direction: column; }
+            .chat-item, .account-item, .log-item, .conn-item {
+                min-height: 44px;
+            }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -1408,19 +1429,24 @@
                     checkboxHtml = `<div class="checkbox ${isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); toggleSelectChat(${chat.chat_id})"></div>`;
                 }
                 const contextAttr = trashMode ? '' : `oncontextmenu="showContextMenu(event, ${chat.chat_id})"`;
-                return `<div class="chat-item ${isPinned ? 'pinned' : ''}" data-chat-id="${chat.chat_id}" onclick="${trashMode ? '' : `openChat('${chat.chat_id}', '${displayName}')`}" ${contextAttr}>
-                    ${checkboxHtml}
-                    <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
-                    <div class="info">
-                        <div class="name">${displayName} ${statusIcon}</div>
-                        <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
-                        <div class="stats-badge">
-                            <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
-                            <span class="edited-count">✏️ ${chat.edited || 0}</span>
-                        </div>
-                    </div>
-                    <div class="time">${chat.last_time || ''}</div>
-                </div>`;
+                
+                return `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
+                            data-chat-id="${chat.chat_id}" 
+                            onclick="${trashMode ? '' : `openChat('${chat.chat_id}', '${displayName.replace(/'/g, "\\'")}')`}"
+                            style="cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;"
+                            ${contextAttr}>
+                            ${checkboxHtml}
+                            <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                            <div class="info">
+                                <div class="name">${displayName} ${statusIcon}</div>
+                                <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
+                                <div class="stats-badge">
+                                    <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                                    <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                                </div>
+                            </div>
+                            <div class="time">${chat.last_time || ''}</div>
+                        </div>`;
             }).join('');
         }
 
@@ -1715,9 +1741,6 @@
             }
         }
 
-        // ============================================================
-        // ОСНОВНАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ С МЕДИА
-        // ============================================================
         function renderMessages(messages) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
@@ -1784,7 +1807,6 @@
                 let content = msg.text_content || '';
                 const fileUrl = msg.file_url ? (msg.file_url.startsWith('http') ? msg.file_url : `${API_URL}${msg.file_url}`) : null;
 
-                // ---- ФОТО ----
                 if (msg.content_type === 'photo' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
@@ -1814,9 +1836,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(img);
-                }
-                // ---- GIF ----
-                else if (msg.content_type === 'gif' && fileUrl) {
+                } else if (msg.content_type === 'gif' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1846,9 +1866,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                }
-                // ---- ВИДЕО ----
-                else if (msg.content_type === 'video' && fileUrl) {
+                } else if (msg.content_type === 'video' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1876,9 +1894,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                }
-                // ---- СТИКЕРЫ ----
-                else if (msg.content_type === 'sticker' && fileUrl) {
+                } else if (msg.content_type === 'sticker' && fileUrl) {
                     const img = document.createElement('img');
                     img.src = fileUrl;
                     img.alt = 'Стикер';
@@ -1903,9 +1919,7 @@
                         textSpan.textContent = ' ' + content;
                         bubble.appendChild(textSpan);
                     }
-                }
-                // ---- ГОЛОСОВЫЕ И АУДИО ----
-                else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
+                } else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1930,9 +1944,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(audio);
-                }
-                // ---- ДОКУМЕНТЫ ----
-                else if (msg.content_type === 'document' && fileUrl) {
+                } else if (msg.content_type === 'document' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1949,9 +1961,7 @@
                     link.style.marginTop = '4px';
                     link.style.wordBreak = 'break-all';
                     bubble.appendChild(link);
-                }
-                // ---- ОБЫЧНЫЙ ТЕКСТ ----
-                else {
+                } else {
                     const labels = {
                         'photo': '📷 Фото',
                         'video': '🎥 Видео',
