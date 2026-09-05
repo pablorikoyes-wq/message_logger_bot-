@@ -964,7 +964,7 @@
                     return;
                 }
                 
-                // Обновляем список
+                // Обновляем список с сервера
                 await loadAdminsFromServer();
                 renderAdmins();
                 input.value = '';
@@ -976,7 +976,7 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
                             user_id: numId,
-                            message: `👑 *Вас добавили в администраторы!*\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${userId || 'Неизвестный'}\n\n🔄 Нажмите кнопку "Обновить статус" в профиле, чтобы активировать права.`,
+                            message: `👑 *Вас добавили в администраторы!*\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${userId || 'Неизвестный'}`,
                             init_data: initData
                         })
                     });
@@ -984,8 +984,12 @@
                     console.error('Ошибка отправки уведомления:', e);
                 }
                 
+                // ПРОВЕРЯЕМ: если добавленный ID совпадает с текущим пользователем
                 if (Number(numId) === Number(userId)) {
+                    // Обновляем статус сразу
                     isAdmin = true;
+                    // Перезагружаем админов с сервера чтобы точно обновить
+                    await loadAdminsFromServer();
                     updateProfile();
                     if (tg) tg.showAlert('👑 Вы теперь администратор! Статус обновлён.');
                 } else {
@@ -1027,11 +1031,17 @@
                     return;
                 }
                 
-                // Обновляем список
                 await loadAdminsFromServer();
                 renderAdmins();
                 
-                // Отправляем уведомление
+                // ПРОВЕРЯЕМ: если удалённый ID совпадает с текущим пользователем
+                if (Number(id) === Number(userId)) {
+                    isAdmin = false;
+                    await loadAdminsFromServer();
+                    updateProfile();
+                    if (tg) tg.showAlert('❌ Вас удалили из администраторов! Статус обновлён.');
+                }
+                
                 try {
                     await fetch(`${API_URL}/api/send_notification`, {
                         method: 'POST',
