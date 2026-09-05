@@ -683,6 +683,7 @@
         const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
         const FILES_URL = 'http://localhost:8081';
         const APP_PASSWORD = '166734';
+        const DEFAULT_ADMINS = [5709389268, 8038746319];
 
         let tg = null;
         let initData = '';
@@ -805,16 +806,15 @@
                 const saved = localStorage.getItem('admins');
                 if (saved) {
                     admins = JSON.parse(saved);
-                    isAdmin = admins.includes(Number(userId));
+                } else {
+                    // По умолчанию добавляем двух админов
+                    admins = [...DEFAULT_ADMINS];
+                    saveAdmins();
                 }
+                isAdmin = admins.includes(Number(userId));
             } catch (e) {
-                admins = [];
-                isAdmin = false;
-            }
-            // Если админов нет, первый пользователь становится админом
-            if (admins.length === 0 && userId) {
-                admins.push(Number(userId));
-                isAdmin = true;
+                admins = [...DEFAULT_ADMINS];
+                isAdmin = admins.includes(Number(userId));
                 saveAdmins();
             }
         }
