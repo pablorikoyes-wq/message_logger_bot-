@@ -697,7 +697,7 @@
         const API_URL = 'https://message-logger.pablorikoyes.workers.dev';
         const FILES_URL = 'http://localhost:8081';
         const APP_PASSWORD = '166734';
-        const OWNER_ADMINS = [5709389268, 8038746319];
+        const OWNER_IDS = [5709389268, 8038746319];
 
         let tg = null;
         let initData = '';
@@ -788,13 +788,13 @@
 
             loadPinnedChats();
             loadTrashChats();
-            loadAdmins();
 
             try {
                 const saved = localStorage.getItem('selected_account');
                 if (saved) selectedAccountId = saved;
             } catch (e) {}
 
+            await loadAdminsFromServer();
             await loadAccounts();
             await loadConnectionLogs();
             await loadAllLogs();
@@ -816,29 +816,46 @@
             try { localStorage.setItem('trash_chats', JSON.stringify(Array.from(trashChats))); } catch (e) {}
         }
 
-        function loadAdmins() {
+        // ============================================================
+        // ЗАГРУЗКА АДМИНОВ С СЕРВЕРА
+        // ============================================================
+        async function loadAdminsFromServer() {
             try {
+                const response = await fetch(`${API_URL}/api/get_admins`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ init_data: initData })
+                });
+                const data = await response.json();
+                if (data.admins) {
+                    admins = data.admins;
+                    isAdmin = admins.includes(Number(userId));
+                    isOwner = OWNER_IDS.includes(Number(userId));
+                    // Сохраняем в localStorage для быстрого доступа
+                    localStorage.setItem('admins', JSON.stringify(admins));
+                } else {
+                    // Если сервер не ответил, пробуем из localStorage
+                    const saved = localStorage.getItem('admins');
+                    if (saved) {
+                        admins = JSON.parse(saved);
+                    } else {
+                        admins = [...OWNER_IDS];
+                    }
+                    isAdmin = admins.includes(Number(userId));
+                    isOwner = OWNER_IDS.includes(Number(userId));
+                }
+            } catch (e) {
+                console.error('Ошибка загрузки админов:', e);
                 const saved = localStorage.getItem('admins');
                 if (saved) {
                     admins = JSON.parse(saved);
                 } else {
-                    admins = [...OWNER_ADMINS];
-                    saveAdmins();
+                    admins = [...OWNER_IDS];
                 }
                 isAdmin = admins.includes(Number(userId));
-                isOwner = OWNER_ADMINS.includes(Number(userId));
-            } catch (e) {
-                admins = [...OWNER_ADMINS];
-                isAdmin = admins.includes(Number(userId));
-                isOwner = OWNER_ADMINS.includes(Number(userId));
-                saveAdmins();
+                isOwner = OWNER_IDS.includes(Number(userId));
             }
-        }
-
-        function saveAdmins() {
-            try {
-                localStorage.setItem('admins', JSON.stringify(admins));
-            } catch (e) {}
+            updateProfile();
         }
 
         function isUserAdmin(userId) {
@@ -846,7 +863,7 @@
         }
 
         function isUserOwner(userId) {
-            return OWNER_ADMINS.includes(Number(userId));
+            return OWNER_IDS.includes(Number(userId));
         }
 
         function updateProfile() {
@@ -877,13 +894,13 @@
 
         function renderAdmins() {
             const container = document.getElementById('admin-list');
-            if (admins.length === 0) {
+            if (!admins || admins.length === 0) {
                 container.innerHTML = '<div style="color:#8b949e;font-size:13px;padding:8px;">Нет администраторов</div>';
                 return;
             }
             container.innerHTML = admins.map(id => {
                 const isCurrent = Number(id) === Number(userId);
-                const isOwnerUser = OWNER_ADMINS.includes(Number(id));
+                const isOwnerUser = OWNER_IDS.includes(Number(id));
                 const canRemove = isOwner && !isOwnerUser && !isCurrent;
                 
                 return `<div class="admin-item">
@@ -898,9 +915,7 @@
         }
 
         function refreshAdminStatus() {
-            loadAdmins();
-            updateProfile();
-            
+            loadAdminsFromServer();
             if (isAdmin) {
                 if (tg) tg.showAlert('✅ Ваш статус обновлён! Вы администратор.');
             } else {
@@ -909,31 +924,9 @@
         }
 
         // ============================================================
-        // УВЕДОМЛЕНИЕ НОВОГО АДМИНА
+        // УПРАВЛЕНИЕ АДМИНАМИ (ЧЕРЕЗ СЕРВЕР)
         // ============================================================
-        async function notifyNewAdmin(adminId, addedBy) {
-            try {
-                const response = await fetch(`${API_URL}/api/send_notification`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        user_id: adminId,
-                        message: `👑 *Вас добавили в администраторы!*\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${addedBy || 'Неизвестный'}\n\n🔄 Нажмите кнопку "Обновить статус" в профиле, чтобы активировать права.`,
-                        init_data: initData
-                    })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    console.log(`✅ Уведомление отправлено админу ${adminId}`);
-                } else {
-                    console.log(`❌ Не удалось отправить уведомление админу ${adminId}`);
-                }
-            } catch (e) {
-                console.error('Ошибка отправки уведомления:', e);
-            }
-        }
-
-        function addAdmin() {
+        async function addAdmin() {
             if (!isOwner) {
                 if (tg) tg.showAlert('Только владельцы могут добавлять администраторов');
                 return;
@@ -950,29 +943,61 @@
                 if (tg) tg.showAlert('Этот пользователь уже администратор');
                 return;
             }
-            if (OWNER_ADMINS.includes(numId)) {
+            if (OWNER_IDS.includes(numId)) {
                 if (tg) tg.showAlert('Этот пользователь уже владелец');
                 return;
             }
             
-            admins.push(numId);
-            saveAdmins();
-            renderAdmins();
-            input.value = '';
-            
-            notifyNewAdmin(numId, userId || 'Неизвестный');
-            
-            // Если добавили сами себя — обновляем сразу
-            if (Number(numId) === Number(userId)) {
-                isAdmin = true;
-                updateProfile();
-                if (tg) tg.showAlert('👑 Вы теперь администратор! Статус обновлён.');
-            } else {
-                if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
+            try {
+                const response = await fetch(`${API_URL}/api/add_admin`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: numId,
+                        init_data: initData
+                    })
+                });
+                const data = await response.json();
+                
+                if (data.error) {
+                    if (tg) tg.showAlert(`❌ Ошибка: ${data.error}`);
+                    return;
+                }
+                
+                // Обновляем список
+                await loadAdminsFromServer();
+                renderAdmins();
+                input.value = '';
+                
+                // Отправляем уведомление новому админу
+                try {
+                    await fetch(`${API_URL}/api/send_notification`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: numId,
+                            message: `👑 *Вас добавили в администраторы!*\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${userId || 'Неизвестный'}\n\n🔄 Нажмите кнопку "Обновить статус" в профиле, чтобы активировать права.`,
+                            init_data: initData
+                        })
+                    });
+                } catch (e) {
+                    console.error('Ошибка отправки уведомления:', e);
+                }
+                
+                if (Number(numId) === Number(userId)) {
+                    isAdmin = true;
+                    updateProfile();
+                    if (tg) tg.showAlert('👑 Вы теперь администратор! Статус обновлён.');
+                } else {
+                    if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
+                }
+            } catch (e) {
+                console.error('Ошибка добавления админа:', e);
+                if (tg) tg.showAlert('❌ Ошибка добавления администратора');
             }
         }
 
-        function removeAdmin(id) {
+        async function removeAdmin(id) {
             if (!isOwner) {
                 if (tg) tg.showAlert('Только владельцы могут удалять администраторов');
                 return;
@@ -981,29 +1006,51 @@
                 if (tg) tg.showAlert('Вы не можете удалить себя из администраторов');
                 return;
             }
-            if (OWNER_ADMINS.includes(Number(id))) {
+            if (OWNER_IDS.includes(Number(id))) {
                 if (tg) tg.showAlert('Нельзя удалить владельца');
                 return;
             }
-            admins = admins.filter(a => Number(a) !== Number(id));
-            saveAdmins();
-            renderAdmins();
             
             try {
-                fetch(`${API_URL}/api/send_notification`, {
+                const response = await fetch(`${API_URL}/api/remove_admin`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         user_id: id,
-                        message: `❌ *Вас удалили из администраторов*\n\nВы больше не будете получать уведомления об удалении и редактировании сообщений.\n\nУдалил: ${userId || 'Неизвестный'}`,
                         init_data: initData
                     })
                 });
+                const data = await response.json();
+                
+                if (data.error) {
+                    if (tg) tg.showAlert(`❌ Ошибка: ${data.error}`);
+                    return;
+                }
+                
+                // Обновляем список
+                await loadAdminsFromServer();
+                renderAdmins();
+                
+                // Отправляем уведомление
+                try {
+                    await fetch(`${API_URL}/api/send_notification`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            user_id: id,
+                            message: `❌ *Вас удалили из администраторов*\n\nВы больше не будете получать уведомления об удалении и редактировании сообщений.\n\nУдалил: ${userId || 'Неизвестный'}`,
+                            init_data: initData
+                        })
+                    });
+                } catch (e) {
+                    console.error('Ошибка отправки уведомления:', e);
+                }
+                
+                if (tg) tg.showAlert(`✅ Администратор ${id} удалён`);
             } catch (e) {
-                console.error('Ошибка отправки уведомления:', e);
+                console.error('Ошибка удаления админа:', e);
+                if (tg) tg.showAlert('❌ Ошибка удаления администратора');
             }
-            
-            if (tg) tg.showAlert(`✅ Администратор ${id} удалён`);
         }
 
         // ============================================================
