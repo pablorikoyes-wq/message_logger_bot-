@@ -807,7 +807,6 @@
                 if (saved) {
                     admins = JSON.parse(saved);
                 } else {
-                    // По умолчанию добавляем двух админов
                     admins = [...DEFAULT_ADMINS];
                     saveAdmins();
                 }
@@ -863,6 +862,31 @@
             }).join('');
         }
 
+        // ============================================================
+        // УВЕДОМЛЕНИЕ НОВОГО АДМИНА
+        // ============================================================
+        async function notifyNewAdmin(adminId, addedBy) {
+            try {
+                const response = await fetch(`${API_URL}/api/send_notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: adminId,
+                        message: `👑 Вас добавили в администраторы!\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${addedBy || 'Неизвестный'}`,
+                        init_data: initData
+                    })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    console.log(`✅ Уведомление отправлено админу ${adminId}`);
+                } else {
+                    console.log(`❌ Не удалось отправить уведомление админу ${adminId}`);
+                }
+            } catch (e) {
+                console.error('Ошибка отправки уведомления:', e);
+            }
+        }
+
         function addAdmin() {
             const input = document.getElementById('admin-id-input');
             const id = input.value.trim();
@@ -879,7 +903,11 @@
             saveAdmins();
             renderAdmins();
             input.value = '';
-            if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор`);
+            
+            // Отправляем уведомление новому админу
+            notifyNewAdmin(numId, userId || 'Неизвестный');
+            
+            if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
         }
 
         function removeAdmin(id) {
