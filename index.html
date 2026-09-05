@@ -635,6 +635,10 @@
                     <div class="label">Статус</div>
                     <div class="value" id="profile-status">Пользователь</div>
                 </div>
+                <button class="profile-btn" onclick="refreshAdminStatus()" style="margin-bottom:8px;">
+                    <span class="icon">🔄</span>
+                    <span>Обновить статус</span>
+                </button>
                 <div class="info-card" id="admin-section" style="display:none;">
                     <div class="label">👑 Администраторы</div>
                     <div class="admin-list" id="admin-list"></div>
@@ -857,7 +861,6 @@
                 adminSection.style.display = 'block';
                 renderAdmins();
                 
-                // Только владельцы могут добавлять/удалять админов
                 if (isOwner) {
                     adminInputGroup.style.display = 'flex';
                     addBtn.disabled = false;
@@ -894,6 +897,17 @@
             }).join('');
         }
 
+        function refreshAdminStatus() {
+            loadAdmins();
+            updateProfile();
+            
+            if (isAdmin) {
+                if (tg) tg.showAlert('✅ Ваш статус обновлён! Вы администратор.');
+            } else {
+                if (tg) tg.showAlert('👤 Ваш статус: пользователь.');
+            }
+        }
+
         // ============================================================
         // УВЕДОМЛЕНИЕ НОВОГО АДМИНА
         // ============================================================
@@ -904,7 +918,7 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         user_id: adminId,
-                        message: `👑 Вас добавили в администраторы!\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${addedBy || 'Неизвестный'}`,
+                        message: `👑 *Вас добавили в администраторы!*\n\nВы теперь будете получать уведомления об удалении и редактировании сообщений.\n\nДобавил: ${addedBy || 'Неизвестный'}\n\n🔄 Нажмите кнопку "Обновить статус" в профиле, чтобы активировать права.`,
                         init_data: initData
                     })
                 });
@@ -940,6 +954,7 @@
                 if (tg) tg.showAlert('Этот пользователь уже владелец');
                 return;
             }
+            
             admins.push(numId);
             saveAdmins();
             renderAdmins();
@@ -947,7 +962,14 @@
             
             notifyNewAdmin(numId, userId || 'Неизвестный');
             
-            if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
+            // Если добавили сами себя — обновляем сразу
+            if (Number(numId) === Number(userId)) {
+                isAdmin = true;
+                updateProfile();
+                if (tg) tg.showAlert('👑 Вы теперь администратор! Статус обновлён.');
+            } else {
+                if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор\nЕму отправлено уведомление`);
+            }
         }
 
         function removeAdmin(id) {
@@ -966,6 +988,21 @@
             admins = admins.filter(a => Number(a) !== Number(id));
             saveAdmins();
             renderAdmins();
+            
+            try {
+                fetch(`${API_URL}/api/send_notification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        user_id: id,
+                        message: `❌ *Вас удалили из администраторов*\n\nВы больше не будете получать уведомления об удалении и редактировании сообщений.\n\nУдалил: ${userId || 'Неизвестный'}`,
+                        init_data: initData
+                    })
+                });
+            } catch (e) {
+                console.error('Ошибка отправки уведомления:', e);
+            }
+            
             if (tg) tg.showAlert(`✅ Администратор ${id} удалён`);
         }
 
