@@ -278,6 +278,7 @@
         .account-item .account-info { flex: 1; }
         .account-item .account-info .account-name { font-weight: 600; font-size: 15px; color: #f0f6fc; }
         .account-item .account-info .account-id { font-size: 12px; color: #8b949e; }
+        .account-item .account-info .account-user { font-size: 12px; color: #8b949e; }
         .account-item .account-status {
             font-size: 11px;
             padding: 2px 10px;
@@ -285,6 +286,11 @@
         }
         .account-item .account-status.online { background: rgba(46, 160, 67, 0.2); color: #3fb950; }
         .account-item .account-status.offline { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+        .account-item .account-chats-count {
+            font-size: 11px;
+            color: #8b949e;
+            margin-top: 2px;
+        }
 
         .profile-section { flex: 1; overflow-y: auto; padding: 16px; min-height: 0; }
         .profile-section .info-card {
@@ -296,6 +302,7 @@
         }
         .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
         .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
+        .profile-section .info-card .value.admin-badge { color: #5865f2; font-size: 13px; }
         .profile-btn {
             display: flex; align-items: center; gap: 12px; padding: 14px 16px;
             background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
@@ -304,6 +311,60 @@
         }
         .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
         .profile-btn .icon { font-size: 20px; }
+        .profile-btn .admin-badge { color: #5865f2; font-size: 12px; margin-left: auto; }
+
+        .admin-input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .admin-input-group input {
+            flex: 1;
+            padding: 8px 12px;
+            background: rgba(26, 26, 46, 0.8);
+            border: 1px solid rgba(48, 54, 61, 0.5);
+            border-radius: 8px;
+            color: #f0f6fc;
+            font-size: 14px;
+            outline: none;
+        }
+        .admin-input-group input:focus { border-color: #5865f2; }
+        .admin-input-group button {
+            padding: 8px 16px;
+            background: #5865f2;
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .admin-input-group button:hover { background: #4752c4; }
+        .admin-list {
+            margin-top: 8px;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        .admin-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            background: rgba(22, 27, 34, 0.5);
+            border-radius: 8px;
+            margin-bottom: 4px;
+        }
+        .admin-item .admin-name { font-size: 14px; color: #f0f6fc; }
+        .admin-item .admin-id { font-size: 12px; color: #8b949e; }
+        .admin-item .remove-admin {
+            background: none;
+            border: none;
+            color: #f85149;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px;
+        }
+        .admin-item .remove-admin:hover { color: #ff6b6b; }
 
         .bottom-nav {
             display: flex;
@@ -378,7 +439,6 @@
         .msg-wrapper.edited .edit-block { margin-top: 3px; padding: 4px 8px; background: rgba(22, 27, 34, 0.8); border-radius: 6px; border-left: 2px solid #d29922; font-size: 11px; max-width: 85%; }
         .msg-time { font-size: 10px; color: #8b949e; margin-top: 1px; padding: 0 4px; }
 
-        /* Стили для медиа */
         .msg-bubble img, .msg-bubble video {
             max-width: 100%;
             border-radius: 8px;
@@ -490,6 +550,7 @@
             .msg-bubble img, .msg-bubble video {
                 max-height: 200px;
             }
+            .admin-input-group { flex-direction: column; }
         }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(20px); }
@@ -553,6 +614,7 @@
             </div>
 
             <div id="accounts-view" class="accounts-list" style="display:none;"></div>
+            <div id="account-chats-view" class="chats-list" style="display:none;"></div>
 
             <div id="profile-view" class="profile-section" style="display:none;">
                 <div class="info-card">
@@ -562,6 +624,14 @@
                 <div class="info-card">
                     <div class="label">Статус</div>
                     <div class="value" id="profile-status">Пользователь</div>
+                </div>
+                <div class="info-card" id="admin-section" style="display:none;">
+                    <div class="label">👑 Администраторы</div>
+                    <div class="admin-list" id="admin-list"></div>
+                    <div class="admin-input-group">
+                        <input type="number" id="admin-id-input" placeholder="Введите ID пользователя" />
+                        <button onclick="addAdmin()">➕ Добавить</button>
+                    </div>
                 </div>
                 <button class="profile-btn" onclick="logoutFromApp()">
                     <span class="icon">🚪</span>
@@ -633,6 +703,10 @@
         let contextChatId = null;
         let connectionLogs = [];
         let filteredConnectionLogs = [];
+        let isAdmin = false;
+        let admins = [];
+        let accountChats = [];
+        let selectedAccountInfo = null;
         
         let logFilters = { all: true, normal: true, edited: true, deleted: true };
 
@@ -698,6 +772,7 @@
 
             loadPinnedChats();
             loadTrashChats();
+            loadAdmins();
 
             try {
                 const saved = localStorage.getItem('selected_account');
@@ -709,6 +784,7 @@
             await loadAllLogs();
             await loadChats();
             checkWarnings();
+            updateProfile();
         }
 
         function loadPinnedChats() {
@@ -724,6 +800,102 @@
             try { localStorage.setItem('trash_chats', JSON.stringify(Array.from(trashChats))); } catch (e) {}
         }
 
+        function loadAdmins() {
+            try {
+                const saved = localStorage.getItem('admins');
+                if (saved) {
+                    admins = JSON.parse(saved);
+                    isAdmin = admins.includes(Number(userId));
+                }
+            } catch (e) {
+                admins = [];
+                isAdmin = false;
+            }
+            // Если админов нет, первый пользователь становится админом
+            if (admins.length === 0 && userId) {
+                admins.push(Number(userId));
+                isAdmin = true;
+                saveAdmins();
+            }
+        }
+
+        function saveAdmins() {
+            try {
+                localStorage.setItem('admins', JSON.stringify(admins));
+            } catch (e) {}
+        }
+
+        function isUserAdmin(userId) {
+            return admins.includes(Number(userId));
+        }
+
+        function updateProfile() {
+            const statusEl = document.getElementById('profile-status');
+            const adminSection = document.getElementById('admin-section');
+            
+            if (isAdmin) {
+                statusEl.textContent = '👑 Администратор';
+                statusEl.className = 'value admin-badge';
+                adminSection.style.display = 'block';
+                renderAdmins();
+            } else {
+                statusEl.textContent = '👤 Пользователь';
+                statusEl.className = 'value';
+                adminSection.style.display = 'none';
+            }
+        }
+
+        function renderAdmins() {
+            const container = document.getElementById('admin-list');
+            if (admins.length === 0) {
+                container.innerHTML = '<div style="color:#8b949e;font-size:13px;padding:8px;">Нет администраторов</div>';
+                return;
+            }
+            container.innerHTML = admins.map(id => {
+                const isCurrent = Number(id) === Number(userId);
+                return `<div class="admin-item">
+                    <div>
+                        <span class="admin-name">${isCurrent ? '👑 ' : ''}${id}</span>
+                        <span class="admin-id">${isCurrent ? '(Вы)' : ''}</span>
+                    </div>
+                    ${!isCurrent ? `<button class="remove-admin" onclick="removeAdmin(${id})">✕</button>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        function addAdmin() {
+            const input = document.getElementById('admin-id-input');
+            const id = input.value.trim();
+            if (!id || isNaN(id)) {
+                if (tg) tg.showAlert('Введите корректный ID пользователя');
+                return;
+            }
+            const numId = Number(id);
+            if (admins.includes(numId)) {
+                if (tg) tg.showAlert('Этот пользователь уже администратор');
+                return;
+            }
+            admins.push(numId);
+            saveAdmins();
+            renderAdmins();
+            input.value = '';
+            if (tg) tg.showAlert(`✅ Пользователь ${numId} добавлен как администратор`);
+        }
+
+        function removeAdmin(id) {
+            if (Number(id) === Number(userId)) {
+                if (tg) tg.showAlert('Вы не можете удалить себя из администраторов');
+                return;
+            }
+            admins = admins.filter(a => Number(a) !== Number(id));
+            saveAdmins();
+            renderAdmins();
+            if (tg) tg.showAlert(`✅ Администратор ${id} удалён`);
+        }
+
+        // ============================================================
+        // АККАУНТЫ
+        // ============================================================
         async function loadAccounts() {
             const container = document.getElementById('accounts-view');
             if (!container) return;
@@ -755,19 +927,111 @@
             container.innerHTML = accounts.map(acc => {
                 const statusText = acc.is_enabled ? '🟢 Активен' : '🔴 Отключён';
                 const statusClass = acc.is_enabled ? 'online' : 'offline';
-                return `<div class="account-item">
-                    <div class="account-avatar">${(acc.name || 'А').charAt(0).toUpperCase()}</div>
+                const name = acc.name || 'Аккаунт';
+                const userInfo = acc.user_id ? `👤 Владелец: ${acc.user_id}` : '';
+                
+                let clickHandler = '';
+                if (isAdmin) {
+                    clickHandler = `onclick="loadAccountChats('${acc.id}', '${name}', '${acc.user_id || ''}')"`;
+                }
+                
+                return `<div class="account-item" ${clickHandler} style="${isAdmin ? 'cursor:pointer;' : ''}">
+                    <div class="account-avatar">${name.charAt(0).toUpperCase()}</div>
                     <div class="account-info">
-                        <div class="account-name">${acc.name || 'Аккаунт'}</div>
-                        <div class="account-id">ID: ${acc.id}</div>
-                        <div style="font-size:11px;color:#8b949e;margin-top:2px;">👤 Владелец: ${acc.user_id}</div>
-                        <div style="font-size:11px;color:#8b949e;">📅 Подключён: ${acc.connected_at || '—'}</div>
+                        <div class="account-name">${name}</div>
+                        <div class="account-id">🔗 ID: ${acc.id}</div>
+                        ${userInfo ? `<div class="account-user">${userInfo}</div>` : ''}
+                        <div class="account-chats-count">📊 Подключён: ${acc.connected_at || '—'}</div>
                     </div>
                     <span class="account-status ${statusClass}">${statusText}</span>
+                    ${isAdmin ? '<span style="font-size:11px;color:#5865f2;">👆 Нажмите</span>' : ''}
                 </div>`;
             }).join('');
         }
 
+        async function loadAccountChats(accountId, accountName, ownerId) {
+            if (!isAdmin) {
+                if (tg) tg.showAlert('Только администраторы могут просматривать чаты аккаунтов');
+                return;
+            }
+            
+            selectedAccountId = accountId;
+            selectedAccountInfo = { id: accountId, name: accountName, owner: ownerId };
+            
+            const container = document.getElementById('account-chats-view');
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка чатов...</div>';
+            container.style.display = 'block';
+            document.getElementById('accounts-view').style.display = 'none';
+            document.getElementById('header-title').textContent = `💬 Чаты аккаунта: ${accountName}`;
+            
+            try {
+                const response = await fetch(`${API_URL}/api/chats`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        init_data: initData,
+                        account_id: accountId
+                    })
+                });
+                const data = await response.json();
+                if (data.error) {
+                    container.innerHTML = `<div class="empty-state"><p class="error">❌ ${data.error}</p></div>`;
+                    return;
+                }
+                if (!data.chats || data.chats.length === 0) {
+                    container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет чатов</div><p style="font-size:13px;">На этом аккаунте пока нет чатов</p></div>`;
+                    return;
+                }
+                accountChats = data.chats;
+                renderAccountChats(accountChats);
+            } catch (e) {
+                container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
+            }
+        }
+
+        function renderAccountChats(chats) {
+            const container = document.getElementById('account-chats-view');
+            container.innerHTML = `
+                <div style="padding:8px 16px;background:rgba(22,27,34,0.5);border-bottom:1px solid rgba(33,38,45,0.3);display:flex;align-items:center;gap:10px;">
+                    <button class="back-btn" onclick="backToAccounts()">← Назад</button>
+                    <span style="font-size:13px;color:#8b949e;">Аккаунт: ${selectedAccountInfo?.name || ''} ${selectedAccountInfo?.owner ? `(Владелец: ${selectedAccountInfo.owner})` : ''}</span>
+                </div>
+            `;
+            
+            const sorted = [...chats].sort((a, b) => {
+                const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
+                const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
+                return bPinned - aPinned;
+            });
+            
+            container.innerHTML += sorted.map(chat => {
+                const displayName = chat.other_party_name || chat.name || 'Чат';
+                const isPinned = pinnedChats.has(chat.chat_id);
+                return `<div class="chat-item ${isPinned ? 'pinned' : ''}" onclick="openChat('${chat.chat_id}', '${displayName}')">
+                    <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                    <div class="info">
+                        <div class="name">${displayName} ${isPinned ? '📌' : ''}</div>
+                        <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
+                        <div class="stats-badge">
+                            <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                            <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                        </div>
+                    </div>
+                    <div class="time">${chat.last_time || ''}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function backToAccounts() {
+            document.getElementById('account-chats-view').style.display = 'none';
+            document.getElementById('accounts-view').style.display = 'block';
+            document.getElementById('header-title').textContent = '🔗 Аккаунты';
+            loadAccounts();
+        }
+
+        // ============================================================
+        // ПОДКЛЮЧЕНИЯ
+        // ============================================================
         async function loadConnectionLogs() {
             try {
                 const response = await fetch(`${API_URL}/api/connection_logs`, {
@@ -834,6 +1098,9 @@
             document.getElementById('warning-banner').classList.remove('visible');
         }
 
+        // ============================================================
+        // ФИЛЬТРЫ ДЛЯ ЛОГОВ
+        // ============================================================
         function setLogFilter(filter) {
             if (filter === 'all') {
                 const allActive = logFilters.all;
@@ -874,6 +1141,9 @@
             renderLogs();
         }
 
+        // ============================================================
+        // ЛОГИ
+        // ============================================================
         async function loadAllLogs() {
             try {
                 const response = await fetch(`${API_URL}/api/all_messages`, {
@@ -925,6 +1195,9 @@
             }).join('');
         }
 
+        // ============================================================
+        // ЧАТЫ
+        // ============================================================
         function getVisibleChats() {
             if (trashMode) {
                 return allChats.filter(chat => trashChats.has(chat.chat_id));
@@ -1010,6 +1283,9 @@
             }
         }
 
+        // ============================================================
+        // КОРЗИНА
+        // ============================================================
         function toggleTrashMode() {
             trashMode = !trashMode;
             selectedChats.clear();
@@ -1146,6 +1422,9 @@
             }
         }
 
+        // ============================================================
+        // КОНТЕКСТНОЕ МЕНЮ
+        // ============================================================
         function showContextMenu(e, chatId) {
             e.preventDefault();
             e.stopPropagation();
@@ -1224,12 +1503,16 @@
             if (!e.target.closest('.context-menu')) hideContextMenu();
         });
 
+        // ============================================================
+        // ОТКРЫТЬ ЧАТ
+        // ============================================================
         function openChat(chatId, chatName) {
             currentChatId = chatId;
             document.getElementById('chat-title').textContent = chatName || 'Чат';
             document.getElementById('logs-list').style.display = 'none';
             document.getElementById('connections-list').style.display = 'none';
             document.getElementById('chats-list').style.display = 'none';
+            document.getElementById('account-chats-view').style.display = 'none';
             document.getElementById('messages-view').classList.add('visible');
             loadMessages(chatId);
         }
@@ -1240,11 +1523,16 @@
                 document.getElementById('logs-list').style.display = 'block';
             } else if (currentTab === 'connections') {
                 document.getElementById('connections-list').style.display = 'block';
+            } else if (currentTab === 'accounts') {
+                document.getElementById('account-chats-view').style.display = 'block';
             } else {
                 document.getElementById('chats-list').style.display = 'block';
             }
         }
 
+        // ============================================================
+        // ЗАГРУЗКА СООБЩЕНИЙ
+        // ============================================================
         async function loadMessages(chatId) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '<div style="text-align:center;padding:20px;color:#8b949e;">Загрузка...</div>';
@@ -1300,9 +1588,6 @@
             container.scrollTop = container.scrollHeight;
         }
 
-        // ============================================================
-        // ОСНОВНАЯ ФУНКЦИЯ ОТОБРАЖЕНИЯ СООБЩЕНИЙ С МЕДИА
-        // ============================================================
         function flushGroup(container, group) {
             if (group.length === 0) return;
 
@@ -1343,7 +1628,6 @@
                 let content = msg.text_content || '';
                 const fileUrl = msg.file_url ? (msg.file_url.startsWith('http') ? msg.file_url : `${FILES_URL}${msg.file_url}`) : null;
 
-                // ---- ФОТО ----
                 if (msg.content_type === 'photo' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
@@ -1366,9 +1650,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(img);
-                }
-                // ---- GIF (АНИМАЦИЯ) ----
-                else if (msg.content_type === 'gif' && fileUrl) {
+                } else if (msg.content_type === 'gif' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1392,9 +1674,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                }
-                // ---- ВИДЕО ----
-                else if (msg.content_type === 'video' && fileUrl) {
+                } else if (msg.content_type === 'video' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1416,9 +1696,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(video);
-                }
-                // ---- СТИКЕРЫ ----
-                else if (msg.content_type === 'sticker' && fileUrl) {
+                } else if (msg.content_type === 'sticker' && fileUrl) {
                     const img = document.createElement('img');
                     img.src = fileUrl;
                     img.alt = 'Стикер';
@@ -1440,9 +1718,7 @@
                         textSpan.textContent = ' ' + content;
                         bubble.appendChild(textSpan);
                     }
-                }
-                // ---- ГОЛОСОВЫЕ И АУДИО ----
-                else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
+                } else if ((msg.content_type === 'voice' || msg.content_type === 'audio') && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1463,9 +1739,7 @@
                         this.parentNode.appendChild(fallback);
                     };
                     bubble.appendChild(audio);
-                }
-                // ---- ДОКУМЕНТЫ ----
-                else if (msg.content_type === 'document' && fileUrl) {
+                } else if (msg.content_type === 'document' && fileUrl) {
                     if (content) {
                         const textSpan = document.createElement('span');
                         textSpan.className = 'msg-text';
@@ -1479,9 +1753,7 @@
                     link.textContent = `📄 ${fileName}`;
                     link.className = 'file-link';
                     bubble.appendChild(link);
-                }
-                // ---- ОБЫЧНЫЙ ТЕКСТ ----
-                else {
+                } else {
                     const labels = {
                         'photo': '📷 Фото',
                         'video': '🎥 Видео',
@@ -1554,6 +1826,7 @@
             const chatsList = document.getElementById('chats-list');
             const messagesView = document.getElementById('messages-view');
             const accountsView = document.getElementById('accounts-view');
+            const accountChatsView = document.getElementById('account-chats-view');
             const profileView = document.getElementById('profile-view');
             const trashBanner = document.getElementById('trash-banner');
             const filters = document.getElementById('filters');
@@ -1563,6 +1836,7 @@
             chatsList.style.display = 'none';
             messagesView.classList.remove('visible');
             accountsView.style.display = 'none';
+            accountChatsView.style.display = 'none';
             profileView.style.display = 'none';
             trashBanner.style.display = 'none';
             filters.style.display = 'none';
@@ -1593,6 +1867,7 @@
                 document.getElementById('tab-profile').classList.add('active');
                 document.getElementById('header-title').textContent = '👤 Профиль';
                 profileView.style.display = 'block';
+                updateProfile();
             }
         }
 
