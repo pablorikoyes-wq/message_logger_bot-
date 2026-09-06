@@ -518,6 +518,98 @@
             margin-left: auto;
         }
 
+        /* Стили для просмотрщика фото */
+        .photo-viewer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.92);
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .photo-viewer-overlay .close-btn {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: white;
+            font-size: 28px;
+            cursor: pointer;
+            z-index: 10000;
+            padding: 8px 16px;
+            border-radius: 50%;
+            transition: all 0.2s;
+            line-height: 1;
+        }
+        .photo-viewer-overlay .close-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .photo-viewer-overlay .photo-container {
+            max-width: 95%;
+            max-height: 75%;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            touch-action: none;
+        }
+        .photo-viewer-overlay .photo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 8px;
+            transition: transform 0.1s ease;
+            transform: scale(1);
+        }
+        .photo-viewer-overlay .zoom-controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-top: 16px;
+            z-index: 10001;
+        }
+        .photo-viewer-overlay .zoom-controls button {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 10px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.2s;
+            min-width: 60px;
+        }
+        .photo-viewer-overlay .zoom-controls button:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .photo-viewer-overlay .zoom-controls .download-btn {
+            background: #5865f2;
+            border: none;
+        }
+        .photo-viewer-overlay .zoom-controls .download-btn:hover {
+            background: #4752c4;
+        }
+        .photo-viewer-overlay .zoom-level {
+            color: rgba(255,255,255,0.5);
+            font-size: 13px;
+            margin-top: 8px;
+            text-align: center;
+        }
+        .photo-viewer-overlay .info-text {
+            color: rgba(255,255,255,0.3);
+            font-size: 12px;
+            margin-top: 6px;
+            z-index: 10001;
+        }
+
         ::-webkit-scrollbar { width: 3px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #30363d; border-radius: 8px; }
@@ -546,6 +638,7 @@
             .admin-input-group { flex-direction: column; }
             .chat-item, .account-item, .log-item, .conn-item { min-height: 44px; }
             .msg-bubble audio { max-width: 160px; }
+            .photo-viewer-overlay .photo-container { max-height: 65%; }
         }
     </style>
 </head>
@@ -1308,7 +1401,7 @@
             container.innerHTML = filteredLogs.map(log => {
                 const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
                 const sender = log.from_user_name || 'Неизвестный';
-                let text = log.text_content || '(без текста)';
+                let text = log.text_content || '';
                 let typeClass = 'normal';
                 let icon = '';
                 let isEdit = log.type === 'edited';
@@ -1317,9 +1410,15 @@
                 if (isDelete || log.is_deleted) {
                     typeClass = 'deleted';
                     icon = '🗑️';
+                    text = log.original_text || log.text_content || '(удалено)';
                 } else if (isEdit || (log.edited_at && log.original_text && log.original_text !== log.text_content)) {
                     typeClass = 'edited';
                     icon = '➡️';
+                }
+                
+                // Если это фото и нет текста — пишем "ФОТО"
+                if (log.content_type === 'photo' && !text) {
+                    text = 'ФОТО';
                 }
                 
                 const safeText = text ? text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
@@ -1342,7 +1441,7 @@
         }
 
         // ============================================================
-        // ФОТО ПРОСМОТРЩИК
+        // ФОТО ПРОСМОТРЩИК С МАСШТАБИРОВАНИЕМ
         // ============================================================
         function openPhotoViewer(imageUrl) {
             // Проверяем, есть ли уже открытый просмотрщик
@@ -1350,99 +1449,156 @@
                 document.body.removeChild(document.getElementById('photo-viewer-overlay'));
             }
             
+            let currentScale = 1;
+            const MIN_SCALE = 0.5;
+            const MAX_SCALE = 5;
+            const STEP = 0.25;
+            
             // Создаём оверлей
             const overlay = document.createElement('div');
             overlay.id = 'photo-viewer-overlay';
-            overlay.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100%;
-                height: 100%;
-                background: rgba(0,0,0,0.92);
-                z-index: 9999;
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                justify-content: center;
-                animation: fadeIn 0.3s ease;
-                padding: 20px;
-            `;
+            overlay.className = 'photo-viewer-overlay';
+            overlay.style.animation = 'fadeIn 0.3s ease';
             
             // Кнопка закрыть
             const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
             closeBtn.textContent = '✕';
-            closeBtn.style.cssText = `
-                position: absolute;
-                top: 16px;
-                right: 16px;
-                background: rgba(255,255,255,0.1);
-                border: none;
-                color: white;
-                font-size: 28px;
-                cursor: pointer;
-                z-index: 10000;
-                padding: 8px 16px;
-                border-radius: 50%;
-                transition: all 0.2s;
-                line-height: 1;
-            `;
-            closeBtn.onmouseover = () => closeBtn.style.background = 'rgba(255,255,255,0.2)';
-            closeBtn.onmouseout = () => closeBtn.style.background = 'rgba(255,255,255,0.1)';
-            closeBtn.onclick = () => {
+            closeBtn.onclick = function() {
                 if (document.getElementById('photo-viewer-overlay')) {
                     document.body.removeChild(document.getElementById('photo-viewer-overlay'));
                 }
             };
             
+            // Контейнер для фото
+            const container = document.createElement('div');
+            container.className = 'photo-container';
+            
             // Изображение
             const img = document.createElement('img');
             img.src = imageUrl;
-            img.style.cssText = `
-                max-width: 95%;
-                max-height: 70%;
-                object-fit: contain;
-                border-radius: 12px;
-                box-shadow: 0 4px 40px rgba(0,0,0,0.5);
-                background: #0a0e17;
-            `;
+            img.alt = 'Фото';
+            img.draggable = false;
+            img.style.transform = 'scale(1)';
+            
+            // Обновление масштаба
+            function updateScale() {
+                img.style.transform = `scale(${currentScale})`;
+                const zoomLevelEl = document.getElementById('zoom-level');
+                if (zoomLevelEl) {
+                    zoomLevelEl.textContent = `${Math.round(currentScale * 100)}%`;
+                }
+            }
+            
+            // Увеличение
+            function zoomIn() {
+                if (currentScale < MAX_SCALE) {
+                    currentScale = Math.min(currentScale + STEP, MAX_SCALE);
+                    updateScale();
+                }
+            }
+            
+            // Уменьшение
+            function zoomOut() {
+                if (currentScale > MIN_SCALE) {
+                    currentScale = Math.max(currentScale - STEP, MIN_SCALE);
+                    updateScale();
+                }
+            }
+            
+            // Сброс масштаба
+            function resetZoom() {
+                currentScale = 1;
+                updateScale();
+            }
+            
+            // Обработка колесика мыши
+            img.addEventListener('wheel', function(e) {
+                e.preventDefault();
+                if (e.deltaY < 0) {
+                    zoomIn();
+                } else {
+                    zoomOut();
+                }
+            }, { passive: false });
+            
+            // Обработка тач-жестов для мобильных
+            let lastTouchDistance = 0;
+            let touchStartScale = 1;
+            
+            img.addEventListener('touchstart', function(e) {
+                if (e.touches.length === 2) {
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const dx = touch1.clientX - touch2.clientX;
+                    const dy = touch1.clientY - touch2.clientY;
+                    lastTouchDistance = Math.sqrt(dx * dx + dy * dy);
+                    touchStartScale = currentScale;
+                }
+            }, { passive: true });
+            
+            img.addEventListener('touchmove', function(e) {
+                if (e.touches.length === 2) {
+                    e.preventDefault();
+                    const touch1 = e.touches[0];
+                    const touch2 = e.touches[1];
+                    const dx = touch1.clientX - touch2.clientX;
+                    const dy = touch1.clientY - touch2.clientY;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    
+                    if (lastTouchDistance > 0) {
+                        const scaleFactor = distance / lastTouchDistance;
+                        let newScale = touchStartScale * scaleFactor;
+                        newScale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, newScale));
+                        currentScale = newScale;
+                        updateScale();
+                    }
+                    lastTouchDistance = distance;
+                }
+            }, { passive: false });
+            
+            img.addEventListener('touchend', function() {
+                lastTouchDistance = 0;
+            }, { passive: true });
+            
+            // Обработка ошибок загрузки
             img.onerror = function() {
                 this.style.display = 'none';
                 const errorText = document.createElement('div');
                 errorText.textContent = '❌ Не удалось загрузить изображение';
                 errorText.style.cssText = 'color: #f85149; font-size: 18px; text-align: center; padding: 40px;';
-                overlay.appendChild(errorText);
+                container.appendChild(errorText);
             };
             
-            // Контейнер для кнопок
-            const btnContainer = document.createElement('div');
-            btnContainer.style.cssText = `
-                display: flex;
-                gap: 12px;
-                flex-wrap: wrap;
-                justify-content: center;
-                margin-top: 20px;
-                z-index: 10001;
-            `;
+            container.appendChild(img);
             
-            // Кнопка скачать
+            // Контролы масштаба
+            const controls = document.createElement('div');
+            controls.className = 'zoom-controls';
+            
+            const zoomOutBtn = document.createElement('button');
+            zoomOutBtn.textContent = '−';
+            zoomOutBtn.onclick = zoomOut;
+            
+            const zoomLevel = document.createElement('span');
+            zoomLevel.id = 'zoom-level';
+            zoomLevel.textContent = '100%';
+            zoomLevel.style.cssText = 'color:white;font-size:14px;display:flex;align-items:center;padding:0 4px;';
+            
+            const zoomInBtn = document.createElement('button');
+            zoomInBtn.textContent = '+';
+            zoomInBtn.onclick = zoomIn;
+            
+            const resetBtn = document.createElement('button');
+            resetBtn.textContent = '⟲';
+            resetBtn.onclick = resetZoom;
+            
             const downloadBtn = document.createElement('button');
             downloadBtn.textContent = '💾 Скачать';
-            downloadBtn.style.cssText = `
-                padding: 12px 28px;
-                background: #5865f2;
-                border: none;
-                border-radius: 12px;
-                color: white;
-                font-size: 15px;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.2s;
-            `;
-            downloadBtn.onmouseover = () => downloadBtn.style.background = '#4752c4';
-            downloadBtn.onmouseout = () => downloadBtn.style.background = '#5865f2';
+            downloadBtn.className = 'download-btn';
             downloadBtn.onclick = function(e) {
                 e.stopPropagation();
+                // Скачиваем фото через fetch с правильными заголовками
                 fetch(imageUrl)
                     .then(res => res.blob())
                     .then(blob => {
@@ -1456,48 +1612,28 @@
                         URL.revokeObjectURL(url);
                     })
                     .catch(() => {
+                        // Если не удалось через fetch - открываем в новой вкладке
                         window.open(imageUrl, '_blank');
                     });
             };
             
-            // Кнопка открыть в новой вкладке
-            const openBtn = document.createElement('button');
-            openBtn.textContent = '🔗 Открыть';
-            openBtn.style.cssText = `
-                padding: 12px 28px;
-                background: rgba(255,255,255,0.1);
-                border: 1px solid rgba(255,255,255,0.2);
-                border-radius: 12px;
-                color: white;
-                font-size: 15px;
-                cursor: pointer;
-                transition: all 0.2s;
-            `;
-            openBtn.onmouseover = () => openBtn.style.background = 'rgba(255,255,255,0.2)';
-            openBtn.onmouseout = () => openBtn.style.background = 'rgba(255,255,255,0.1)';
-            openBtn.onclick = function(e) {
-                e.stopPropagation();
-                window.open(imageUrl, '_blank');
-            };
+            controls.appendChild(zoomOutBtn);
+            controls.appendChild(zoomLevel);
+            controls.appendChild(zoomInBtn);
+            controls.appendChild(resetBtn);
+            controls.appendChild(downloadBtn);
             
-            btnContainer.appendChild(downloadBtn);
-            btnContainer.appendChild(openBtn);
+            // Информация
+            const infoText = document.createElement('div');
+            infoText.className = 'info-text';
+            infoText.textContent = '🔄 Колесико/щипок для зума • ✕ закрыть';
             
             overlay.appendChild(closeBtn);
-            overlay.appendChild(img);
-            overlay.appendChild(btnContainer);
-            
-            // Информация о фото
-            const infoText = document.createElement('div');
-            infoText.style.cssText = `
-                color: rgba(255,255,255,0.4);
-                font-size: 12px;
-                margin-top: 12px;
-                z-index: 10001;
-            `;
-            infoText.textContent = 'Нажмите на фон чтобы закрыть';
+            overlay.appendChild(container);
+            overlay.appendChild(controls);
             overlay.appendChild(infoText);
             
+            // Закрытие по клику на фон
             overlay.onclick = function(e) {
                 if (e.target === this) {
                     if (document.getElementById('photo-viewer-overlay')) {
@@ -1506,12 +1642,26 @@
                 }
             };
             
+            // Закрытие по Escape
             const keyHandler = function(e) {
                 if (e.key === 'Escape') {
                     if (document.getElementById('photo-viewer-overlay')) {
                         document.body.removeChild(document.getElementById('photo-viewer-overlay'));
                     }
                     document.removeEventListener('keydown', keyHandler);
+                }
+                // +/- для зума
+                if (e.key === '+' || e.key === '=') {
+                    e.preventDefault();
+                    zoomIn();
+                }
+                if (e.key === '-') {
+                    e.preventDefault();
+                    zoomOut();
+                }
+                if (e.key === '0') {
+                    e.preventDefault();
+                    resetZoom();
                 }
             };
             document.addEventListener('keydown', keyHandler);
@@ -1956,15 +2106,16 @@
 
                 bubble.className = classes;
 
-                let content = msg.text_content || '(без текста)';
+                let content = msg.text_content || '';
                 const fileUrl = msg.file_url ? (msg.file_url.startsWith('http') ? msg.file_url : `${API_URL}${msg.file_url}`) : null;
 
                 // ---- ФОТО ----
                 if (msg.content_type === 'photo' && fileUrl) {
-                    // Текст
+                    // Если нет текста — пишем "ФОТО"
+                    const displayText = content || 'ФОТО';
                     const textSpan = document.createElement('span');
                     textSpan.className = 'msg-text';
-                    textSpan.textContent = content;
+                    textSpan.textContent = displayText;
                     bubble.appendChild(textSpan);
                     
                     // Иконка 📷› с кликом
