@@ -1328,59 +1328,63 @@
         }
 
         function renderLogs() {
-            const container = document.getElementById('logs-list');
-            if (!container) return;
-            if (filteredLogs.length === 0) {
-                container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов</div><p style="font-size:13px;">Сообщения появятся после подключения бота</p></div>`;
-                return;
-            }
-            container.innerHTML = filteredLogs.map(log => {
-                const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
-                const sender = log.from_user_name || 'Неизвестный';
-                let text = log.text_content || '(без текста)';
-                let typeClass = 'normal';
-                let icon = '';
-                let originalText = '';
-                let isEdit = log.type === 'edited';
-                let isDelete = log.type === 'deleted';
-                
-                if (isDelete || log.is_deleted) {
-                    typeClass = 'deleted';
-                    icon = '🗑️';
-                    text = log.original_text || log.text_content || '(удалено)';
-                } else if (isEdit || (log.edited_at && log.original_text && log.original_text !== log.text_content)) {
-                    typeClass = 'edited';
-                    icon = '➡️';
-                    originalText = log.original_text;
-                }
-                
-                // Для фото - иконка 📷 с стрелкой
-                let photoHtml = '';
-                if (log.content_type === 'photo' && log.file_url) {
-                    const fileUrl = log.file_url.startsWith('http') ? log.file_url : `${API_URL}${log.file_url}`;
-                    photoHtml = `
-                        <span class="photo-indicator" onclick="event.stopPropagation(); openPhotoViewer('${fileUrl}')">
-                            📷 <span class="arrow">›</span>
-                        </span>
-                    `;
-                }
-                
-                // Определяем действие при клике на логи
-                let clickAction = `openChat('${log.chat_id}', 'Чат')`;
-                if (log.content_type === 'photo' && log.file_url) {
-                    const fileUrl = log.file_url.startsWith('http') ? log.file_url : `${API_URL}${log.file_url}`;
-                    clickAction = `openPhotoViewer('${fileUrl}')`;
-                }
-                
-                return `<div class="log-item ${typeClass}" onclick="${clickAction}">
-                            <span class="log-time">${time}</span>
-                            <span class="log-sender">${sender}</span>
-                            <span class="log-text">${typeClass === 'edited' ? `<span style="color:#8b949e;text-decoration:line-through;">${originalText}</span> → ` : ''}${text}</span>
-                            ${photoHtml}
-                            ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
-                        </div>`;
-            }).join('');
+    const container = document.getElementById('logs-list');
+    if (!container) return;
+    if (filteredLogs.length === 0) {
+        container.innerHTML = `<div class="empty-state"><div class="icon">📭</div><div class="title">Нет логов</div><p style="font-size:13px;">Сообщения появятся после подключения бота</p></div>`;
+        return;
+    }
+    container.innerHTML = filteredLogs.map(log => {
+        const time = log.sent_at ? new Date(log.sent_at).toLocaleString('ru-RU') : '';
+        const sender = log.from_user_name || 'Неизвестный';
+        let text = log.text_content || '(без текста)';
+        let typeClass = 'normal';
+        let icon = '';
+        let originalText = '';
+        let isEdit = log.type === 'edited';
+        let isDelete = log.type === 'deleted';
+        
+        if (isDelete || log.is_deleted) {
+            typeClass = 'deleted';
+            icon = '🗑️';
+            text = log.original_text || log.text_content || '(удалено)';
+        } else if (isEdit || (log.edited_at && log.original_text && log.original_text !== log.text_content)) {
+            typeClass = 'edited';
+            icon = '➡️';
+            originalText = log.original_text;
         }
+        
+        // БЕЗОПАСНЫЙ ТЕКСТ
+        const safeText = text ? text.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+        const safeOriginal = originalText ? originalText.replace(/</g, '&lt;').replace(/>/g, '&gt;') : '';
+        
+        // Для фото - иконка 📷 с стрелкой
+        let photoHtml = '';
+        if (log.content_type === 'photo' && log.file_url) {
+            const fileUrl = log.file_url.startsWith('http') ? log.file_url : `${API_URL}${log.file_url}`;
+            photoHtml = `
+                <span class="photo-indicator" onclick="event.stopPropagation(); openPhotoViewer('${fileUrl}')">
+                    📷 <span class="arrow">›</span>
+                </span>
+            `;
+        }
+        
+        // Определяем действие при клике на логи
+        let clickAction = `openChat('${log.chat_id}', 'Чат')`;
+        if (log.content_type === 'photo' && log.file_url) {
+            const fileUrl = log.file_url.startsWith('http') ? log.file_url : `${API_URL}${log.file_url}`;
+            clickAction = `openPhotoViewer('${fileUrl}')`;
+        }
+        
+        return `<div class="log-item ${typeClass}" onclick="${clickAction}">
+                    <span class="log-time">${time}</span>
+                    <span class="log-sender">${sender}</span>
+                    <span class="log-text">${typeClass === 'edited' ? `<span style="color:#8b949e;text-decoration:line-through;">${safeOriginal}</span> → ` : ''}${safeText}</span>
+                    ${photoHtml}
+                    ${icon ? `<span class="log-icon ${typeClass}-icon">${icon}</span>` : ''}
+                </div>`;
+    }).join('');
+}
 
         // Фото просмотрщик
         function openPhotoViewer(imageUrl) {
@@ -1606,42 +1610,79 @@
         }
 
         function renderChats(chats) {
-            const container = document.getElementById('chats-list');
-            const sorted = [...chats].sort((a, b) => {
-                const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
-                const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
-                return bPinned - aPinned;
-            });
-            container.innerHTML = sorted.map(chat => {
-                const isPinned = pinnedChats.has(chat.chat_id);
-                const isSelected = selectedChats.has(chat.chat_id);
-                const displayName = chat.other_party_name || chat.name || 'Чат';
-                let statusIcon = isPinned ? '📌' : '';
-                let checkboxHtml = '';
-                if (trashMode && selectMode) {
-                    checkboxHtml = `<div class="checkbox ${isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); toggleSelectChat(${chat.chat_id})"></div>`;
-                }
-                const contextAttr = trashMode ? '' : `oncontextmenu="showContextMenu(event, ${chat.chat_id})"`;
-                
-                return `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
-                            data-chat-id="${chat.chat_id}" 
-                            onclick="${trashMode ? '' : `openChat('${chat.chat_id}', '${displayName.replace(/'/g, "\\'")}')`}"
-                            style="cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;"
-                            ${contextAttr}>
-                            ${checkboxHtml}
-                            <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
-                            <div class="info">
-                                <div class="name">${displayName} ${statusIcon}</div>
-                                <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
-                                <div class="stats-badge">
-                                    <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
-                                    <span class="edited-count">✏️ ${chat.edited || 0}</span>
-                                </div>
-                            </div>
-                            <div class="time">${chat.last_time || ''}</div>
-                        </div>`;
-            }).join('');
+    const container = document.getElementById('chats-list');
+    const sorted = [...chats].sort((a, b) => {
+        const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
+        const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
+        return bPinned - aPinned;
+    });
+    container.innerHTML = sorted.map(chat => {
+        const isPinned = pinnedChats.has(chat.chat_id);
+        const isSelected = selectedChats.has(chat.chat_id);
+        const displayName = chat.other_party_name || chat.name || 'Чат';
+        let statusIcon = isPinned ? '📌' : '';
+        let checkboxHtml = '';
+        if (trashMode && selectMode) {
+            checkboxHtml = `<div class="checkbox ${isSelected ? 'checked' : ''}" onclick="event.stopPropagation(); toggleSelectChat(${chat.chat_id})"></div>`;
         }
+        const contextAttr = trashMode ? '' : `oncontextmenu="showContextMenu(event, ${chat.chat_id})"`;
+        
+        // БЕЗОПАСНОЕ ИМЯ ДЛЯ ONCLICK
+        const safeName = displayName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        
+        return `<div class="chat-item ${isPinned ? 'pinned' : ''}" 
+                    data-chat-id="${chat.chat_id}" 
+                    onclick="${trashMode ? '' : `openChat('${chat.chat_id}', '${safeName}')`}"
+                    style="cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;"
+                    ${contextAttr}>
+                    ${checkboxHtml}
+                    <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                    <div class="info">
+                        <div class="name">${displayName} ${statusIcon}</div>
+                        <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
+                        <div class="stats-badge">
+                            <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                            <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                        </div>
+                    </div>
+                    <div class="time">${chat.last_time || ''}</div>
+                </div>`;
+    }).join('');
+}
+
+function renderAccountChats(chats) {
+    const container = document.getElementById('account-chats-view');
+    container.innerHTML = `
+        <div style="padding:8px 16px;background:rgba(22,27,34,0.5);border-bottom:1px solid rgba(33,38,45,0.3);display:flex;align-items:center;gap:10px;">
+            <button class="back-btn" onclick="backToAccounts()">← Назад</button>
+            <span style="font-size:13px;color:#8b949e;">Аккаунт: ${selectedAccountInfo?.name || ''} ${selectedAccountInfo?.owner ? `(Владелец: ${selectedAccountInfo.owner})` : ''}</span>
+        </div>
+    `;
+    
+    const sorted = [...chats].sort((a, b) => {
+        const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
+        const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
+        return bPinned - aPinned;
+    });
+    
+    container.innerHTML += sorted.map(chat => {
+        const displayName = chat.other_party_name || chat.name || 'Чат';
+        const isPinned = pinnedChats.has(chat.chat_id);
+        const safeName = displayName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        return `<div class="chat-item ${isPinned ? 'pinned' : ''}" onclick="openChat('${chat.chat_id}', '${safeName}')">
+                    <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                    <div class="info">
+                        <div class="name">${displayName} ${isPinned ? '📌' : ''}</div>
+                        <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
+                        <div class="stats-badge">
+                            <span class="deleted-count">🗑️ ${chat.deleted || 0}</span>
+                            <span class="edited-count">✏️ ${chat.edited || 0}</span>
+                        </div>
+                    </div>
+                    <div class="time">${chat.last_time || ''}</div>
+                </div>`;
+    }).join('');
+}
 
         function refreshAll() {
             if (currentTab === 'logs') {
