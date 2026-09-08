@@ -433,6 +433,7 @@
         }
         .msg-wrapper { display: flex; flex-direction: column; max-width: 100%; }
         .msg-wrapper .sender-name { font-size: 11px; color: #8b949e; margin-bottom: 1px; padding-left: 10px; }
+        .msg-wrapper.outgoing .sender-name { padding-left: 0; padding-right: 10px; text-align: right; }
         .msg-bubble { padding: 6px 12px; border-radius: 10px; max-width: 85%; word-wrap: break-word; position: relative; font-size: 13px; line-height: 1.4; }
         .msg-wrapper.outgoing { align-self: flex-end; }
         .msg-wrapper.outgoing .msg-bubble { background: #2b5278; color: white; border-bottom-right-radius: 3px; }
@@ -749,6 +750,7 @@
         let filteredLogs = [];
         let allMessages = [];
         let currentChatId = null;
+        let currentChatName = null;
         let accountsData = [];
         let pinnedChats = new Set();
         let trashChats = new Set();
@@ -827,8 +829,10 @@
             await loadAdminsFromServer();
             await loadAccounts();
             await loadConnectionLogs();
-            await loadAllLogs();
+            // Чаты грузим ДО логов — renderLogs() подставляет имя собеседника
+            // по chat_id из уже загруженного allChats (см. getChatDisplayName).
             await loadChats();
+            await loadAllLogs();
             checkWarnings();
             updateProfile();
         }
@@ -1378,7 +1382,12 @@
                     photoHtml = `<span onclick="event.stopPropagation(); openPhotoViewer('${fileUrl}')" style="cursor:pointer;color:#5865f2;font-size:13px;font-weight:bold;background:rgba(88,101,242,0.1);padding:1px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:2px;margin-left:4px;flex-shrink:0;">📷›</span>`;
                 }
 
-                return `<div class="log-item ${typeClass}" onclick="${log.content_type === 'photo' && log.file_url ? `event.stopPropagation(); openPhotoViewer('${log.file_url.startsWith('http') ? log.file_url : API_URL + log.file_url}')` : `openChat('${log.chat_id}', 'Чат')`}" style="cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid rgba(22,27,34,0.5);min-height:44px;">
+                // Имя собеседника для заголовка чата — берём из уже загруженного
+                // списка чатов (по chat_id), а не подставляем слово "Чат"
+                const chatDisplayName = getChatDisplayName(log.chat_id);
+                const safeChatName = chatDisplayName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+
+                return `<div class="log-item ${typeClass}" onclick="${log.content_type === 'photo' && log.file_url ? `event.stopPropagation(); openPhotoViewer('${log.file_url.startsWith('http') ? log.file_url : API_URL + log.file_url}')` : `openChat('${log.chat_id}', '${safeChatName}')`}" style="cursor:pointer;display:flex;align-items:center;flex-wrap:wrap;gap:6px;padding:10px 16px;border-bottom:1px solid rgba(22,27,34,0.5);min-height:44px;">
                             <span style="color:#8b949e;font-size:11px;flex-shrink:0;min-width:70px;">${time}</span>
                             <span style="color:#8b949e;font-size:12px;flex-shrink:0;max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${sender}</span>
                             <span style="flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;padding:0 6px;min-width:60px;">${safeText}</span>
@@ -1386,6 +1395,13 @@
                             ${icon ? `<span style="font-size:14px;flex-shrink:0;margin-left:auto;">${icon}</span>` : ''}
                         </div>`;
             }).join('');
+        }
+        // Имя собеседника по chat_id — ищем в уже загруженном списке чатов
+        // (allChats грузится и в личном, и в admin-режиме через /api/chats).
+        function getChatDisplayName(chatId) {
+            const found = allChats.find(c => String(c.chat_id) === String(chatId));
+            if (found) return found.other_party_name || found.name || 'Чат';
+            return 'Чат';
         }
         // ============================================================
         // ФОТО ПРОСМОТРЩИК С МАСШТАБИРОВАНИЕМ
@@ -1920,7 +1936,8 @@
         // ============================================================
         function openChat(chatId, chatName) {
             currentChatId = chatId;
-            document.getElementById('chat-title').textContent = chatName || 'Чат';
+            currentChatName = chatName || getChatDisplayName(chatId);
+            document.getElementById('chat-title').textContent = currentChatName;
             document.getElementById('logs-list').style.display = 'none';
             document.getElementById('connections-list').style.display = 'none';
             document.getElementById('chats-list').style.display = 'none';
@@ -1974,17 +1991,24 @@
         function renderMessages(messages) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
-            let lastSender = null;
+            let lastSenderId = undefined; // undefined = ещё не было группы
             let msgGroup = [];
             messages.forEach((msg, index) => {
-                const isMine = msg.from_user_name && msg.from_user_name.includes('⁠⁠⁠⁠');
-                const sender = msg.from_user_name || 'Неизвестный';
-                if (lastSender !== null && lastSender !== sender) {
+                // chat_id в приватном бизнес-чате — это Telegram ID собеседника,
+                // поэтому если from_user_id совпадает с currentChatId — сообщение
+                // от собеседника (показываем слева), иначе — от владельца
+                // аккаунта, к которому подключён бот (показываем справа).
+                const senderId = (msg.from_user_id !== undefined && msg.from_user_id !== null)
+                    ? String(msg.from_user_id) : null;
+                const isFromInterlocutor = senderId !== null && senderId === String(currentChatId);
+                const isOwner = !isFromInterlocutor;
+                const sender = msg.from_user_name || (isFromInterlocutor ? (currentChatName || 'Собеседник') : 'Вы');
+                if (lastSenderId !== undefined && lastSenderId !== senderId) {
                     flushGroup(container, msgGroup);
                     msgGroup = [];
                 }
-                msgGroup.push({ msg, isMine, sender });
-                lastSender = sender;
+                msgGroup.push({ msg, isOwner, sender });
+                lastSenderId = senderId;
                 if (index === messages.length - 1) {
                     flushGroup(container, msgGroup);
                 }
@@ -1993,18 +2017,17 @@
         }
         function flushGroup(container, group) {
             if (group.length === 0) return;
-            const isMine = group[0].isMine;
+            const isMine = group[0].isOwner;
             const sender = group[0].sender;
-            const showName = !isMine;
             const wrapper = document.createElement('div');
             wrapper.style.cssText = 'display:flex;flex-direction:column;max-width:100%;';
             wrapper.className = `msg-wrapper ${isMine ? 'outgoing' : 'incoming'}`;
-            if (showName) {
-                const nameEl = document.createElement('div');
-                nameEl.className = 'sender-name';
-                nameEl.textContent = sender;
-                wrapper.appendChild(nameEl);
-            }
+            // Ник показываем один раз над группой сообщений подряд от одного
+            // отправителя (и для собеседника, и для владельца), без дублирования.
+            const nameEl = document.createElement('div');
+            nameEl.className = 'sender-name';
+            nameEl.textContent = sender;
+            wrapper.appendChild(nameEl);
             group.forEach(({ msg }) => {
                 const bubble = document.createElement('div');
                 let classes = 'msg-bubble';
