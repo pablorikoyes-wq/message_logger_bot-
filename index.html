@@ -9,7 +9,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0e17;
+            background: #0e1621;
             color: #e6edf3;
             min-height: 100vh;
             padding: 0;
@@ -36,17 +36,17 @@
             left: -10%;
             width: 120%;
             height: 120%;
-            background: radial-gradient(ellipse at 50% 100%, rgba(88, 101, 242, 0.08) 0%, transparent 70%);
+            background: radial-gradient(ellipse at 50% 100%, rgba(42, 171, 238, 0.08) 0%, transparent 70%);
             border-radius: 50%;
             animation: waveMove 8s ease-in-out infinite alternate;
         }
         .wave:nth-child(2) {
-            background: radial-gradient(ellipse at 30% 100%, rgba(88, 101, 242, 0.05) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 30% 100%, rgba(42, 171, 238, 0.05) 0%, transparent 60%);
             animation-delay: -3s;
             animation-duration: 10s;
         }
         .wave:nth-child(3) {
-            background: radial-gradient(ellipse at 70% 100%, rgba(88, 101, 242, 0.06) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 70% 100%, rgba(42, 171, 238, 0.06) 0%, transparent 50%);
             animation-delay: -6s;
             animation-duration: 12s;
         }
@@ -62,7 +62,7 @@
             flex-direction: column;
             max-width: 500px;
             margin: 0 auto;
-            background: rgba(13, 17, 23, 0.92);
+            background: rgba(14, 22, 33, 0.92);
             backdrop-filter: blur(20px);
             -webkit-backdrop-filter: blur(20px);
         }
@@ -76,23 +76,32 @@
             text-align: center;
             animation: fadeIn 0.5s ease;
         }
-        .password-screen .lock-icon { font-size: 56px; margin-bottom: 16px; animation: pulse 2s ease-in-out infinite; }
+        .password-screen .lock-icon {
+            font-size: 44px;
+            width: 96px; height: 96px;
+            display: flex; align-items: center; justify-content: center;
+            margin-bottom: 20px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #2AABEE, #229ED9);
+            box-shadow: 0 8px 28px rgba(42, 171, 238, 0.35);
+            animation: pulse 2s ease-in-out infinite;
+        }
         @keyframes pulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
         .password-screen h2 { font-size: 22px; font-weight: 700; background: linear-gradient(135deg, #f0f6fc, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .password-screen .sub { color: #8b949e; margin-top: 6px; font-size: 14px; }
         .password-screen input {
             width: 100%; max-width: 280px; padding: 12px 16px; font-size: 18px;
-            background: rgba(26, 26, 46, 0.8); border: 2px solid rgba(88, 101, 242, 0.3);
+            background: rgba(18, 27, 36, 0.8); border: 2px solid rgba(42, 171, 238, 0.3);
             border-radius: 12px; color: #f0f6fc; text-align: center; letter-spacing: 6px;
             margin-top: 20px; outline: none; transition: all 0.3s;
         }
-        .password-screen input:focus { border-color: #5865f2; box-shadow: 0 0 20px rgba(88, 101, 242, 0.2); }
+        .password-screen input:focus { border-color: #2AABEE; box-shadow: 0 0 20px rgba(42, 171, 238, 0.2); }
         .password-screen .btn-primary {
-            margin-top: 14px; padding: 12px 40px; background: linear-gradient(135deg, #5865f2, #4752c4);
+            margin-top: 14px; padding: 12px 40px; background: linear-gradient(135deg, #2AABEE, #229ED9);
             color: white; border: none; border-radius: 12px; font-size: 16px; font-weight: 600;
             cursor: pointer; transition: all 0.3s; width: 100%; max-width: 280px;
         }
-        .password-screen .btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(88, 101, 242, 0.3); }
+        .password-screen .btn-primary:hover { transform: scale(1.02); box-shadow: 0 4px 20px rgba(42, 171, 238, 0.3); }
         .password-screen .btn-secondary {
             margin-top: 10px; padding: 10px 30px; background: rgba(255, 255, 255, 0.05);
             color: #8b949e; border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px;
@@ -105,23 +114,24 @@
         .app-container { flex: 1; display: flex; flex-direction: column; min-height: 0; height: 100vh; }
         .header {
             display: flex; align-items: center; justify-content: space-between;
-            padding: 12px 16px; background: rgba(22, 27, 34, 0.8);
+            padding: 12px 16px; background: rgba(23, 33, 43, 0.85);
             border-bottom: 1px solid rgba(33, 38, 45, 0.5); flex-shrink: 0;
             backdrop-filter: blur(10px);
+            box-shadow: 0 2px 12px rgba(0, 0, 0, 0.2);
             z-index: 10;
         }
         .header h1 { font-size: 17px; font-weight: 700; background: linear-gradient(135deg, #f0f6fc, #8b949e); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .header .badge { background: linear-gradient(135deg, #5865f2, #4752c4); color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+        .header .badge { background: linear-gradient(135deg, #2AABEE, #229ED9); color: white; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
         .header .header-actions { display: flex; gap: 10px; align-items: center; }
         .header .header-actions button { background: none; border: none; color: #8b949e; font-size: 18px; cursor: pointer; padding: 4px; transition: all 0.3s; }
         .header .header-actions button:hover { color: #f0f6fc; }
-        .header .header-actions .active-btn { color: #5865f2; }
-        .back-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: #5865f2; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 0; }
+        .header .header-actions .active-btn { color: #2AABEE; }
+        .back-btn { display: inline-flex; align-items: center; gap: 4px; background: none; border: none; color: #2AABEE; font-size: 14px; font-weight: 600; cursor: pointer; padding: 4px 0; }
         .filters {
             display: flex;
             gap: 8px;
             padding: 8px 16px;
-            background: rgba(22, 27, 34, 0.6);
+            background: rgba(23, 33, 43, 0.6);
             border-bottom: 1px solid rgba(33, 38, 45, 0.3);
             flex-shrink: 0;
             overflow-x: auto;
@@ -141,21 +151,73 @@
             white-space: nowrap;
         }
         .filter-btn.active {
-            background: rgba(88, 101, 242, 0.2);
-            border-color: #5865f2;
-            color: #5865f2;
+            background: rgba(42, 171, 238, 0.2);
+            border-color: #2AABEE;
+            color: #2AABEE;
         }
         .filter-btn:hover { background: rgba(48, 54, 61, 0.4); }
-        .filter-btn.all.active { background: rgba(88, 101, 242, 0.2); border-color: #5865f2; color: #5865f2; }
+        .filter-btn.all.active { background: rgba(42, 171, 238, 0.2); border-color: #2AABEE; color: #2AABEE; }
         .filter-btn.normal.active { background: rgba(63, 185, 80, 0.2); border-color: #3fb950; color: #3fb950; }
         .filter-btn.edited.active { background: rgba(210, 153, 34, 0.2); border-color: #d29922; color: #d29922; }
         .filter-btn.deleted.active { background: rgba(248, 81, 73, 0.2); border-color: #f85149; color: #f85149; }
+        .filter-btn:active { transform: scale(0.94); }
+        /* ---- Поиск (чаты и сообщения в чате) ---- */
+        .search-bar {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(23, 33, 43, 0.6);
+            border-bottom: 1px solid rgba(33, 38, 45, 0.3);
+            flex-shrink: 0;
+            animation: fadeIn 0.2s ease;
+        }
+        .search-bar .search-icon { font-size: 14px; color: #8b949e; flex-shrink: 0; }
+        .search-bar input {
+            flex: 1;
+            background: rgba(14, 22, 33, 0.7);
+            border: 1px solid rgba(48, 54, 61, 0.6);
+            border-radius: 10px;
+            padding: 7px 12px;
+            color: #f0f6fc;
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+        .search-bar input:focus { border-color: #2AABEE; box-shadow: 0 0 0 3px rgba(42, 171, 238, 0.15); }
+        .search-bar input::placeholder { color: #6e7681; }
+        .search-bar .search-clear {
+            background: rgba(255, 255, 255, 0.06);
+            border: none;
+            color: #8b949e;
+            cursor: pointer;
+            font-size: 13px;
+            width: 22px;
+            height: 22px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: all 0.2s;
+        }
+        .search-bar .search-clear:hover { background: rgba(248, 81, 73, 0.2); color: #f85149; }
+        .search-no-results { text-align: center; padding: 24px 16px; color: #8b949e; font-size: 13px; }
+        /* ---- Разноцветные аватарки, как в Telegram ---- */
+        .avatar-c1 { background: linear-gradient(135deg, #ff6b6b, #ee5a6f) !important; }
+        .avatar-c2 { background: linear-gradient(135deg, #feca57, #ff9f43) !important; }
+        .avatar-c3 { background: linear-gradient(135deg, #1dd1a1, #10ac84) !important; }
+        .avatar-c4 { background: linear-gradient(135deg, #54a0ff, #2e86de) !important; }
+        .avatar-c5 { background: linear-gradient(135deg, #5f27cd, #a55eea) !important; }
+        .avatar-c6 { background: linear-gradient(135deg, #00d2d3, #01a3a4) !important; }
+        .avatar-c7 { background: linear-gradient(135deg, #ff9ff3, #f368e0) !important; }
+        .avatar-c8 { background: linear-gradient(135deg, #ff793f, #eb2f06) !important; }
         .logs-list { flex: 1; overflow-y: auto; padding: 8px 0; min-height: 0; }
         .log-item {
             display: flex;
             align-items: center;
             padding: 10px 16px;
-            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            border-bottom: 1px solid rgba(23, 33, 43, 0.5);
             gap: 10px;
             font-size: 13px;
             cursor: pointer;
@@ -165,8 +227,10 @@
             touch-action: manipulation;
             min-height: 44px;
             flex-wrap: wrap;
+            animation: fadeIn 0.2s ease;
         }
-        .log-item:hover { background: rgba(22, 27, 34, 0.4); }
+        .log-item:hover { background: rgba(23, 33, 43, 0.4); }
+        .log-item:active { background: rgba(42, 171, 238, 0.08); }
         .log-item .log-time { color: #8b949e; font-size: 11px; flex-shrink: 0; min-width: 70px; }
         .log-item .log-sender { color: #8b949e; font-size: 12px; flex-shrink: 0; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .log-item .log-text { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding: 0 6px; min-width: 60px; }
@@ -181,7 +245,7 @@
             display: flex;
             align-items: center;
             padding: 10px 16px;
-            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            border-bottom: 1px solid rgba(23, 33, 43, 0.5);
             gap: 10px;
             font-size: 13px;
             border-radius: 0;
@@ -204,7 +268,7 @@
             padding: 14px 16px;
             cursor: pointer;
             transition: all 0.2s;
-            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            border-bottom: 1px solid rgba(23, 33, 43, 0.5);
             gap: 14px;
             position: relative;
             user-select: none;
@@ -212,15 +276,20 @@
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             min-height: 44px;
+            animation: fadeIn 0.2s ease;
         }
-        .chat-item:hover { background: rgba(22, 27, 34, 0.5); }
-        .chat-item.pinned { border-left: 3px solid #5865f2; background: rgba(88, 101, 242, 0.05); }
+        .chat-item:hover { background: rgba(23, 33, 43, 0.5); }
+        .chat-item:active { background: rgba(42, 171, 238, 0.08); }
+        .chat-item.pinned { border-left: 3px solid #2AABEE; background: rgba(42, 171, 238, 0.05); }
         .chat-item .avatar {
             width: 48px; height: 48px; border-radius: 50%;
-            background: linear-gradient(135deg, #5865f2, #4752c4);
+            background: linear-gradient(135deg, #2AABEE, #229ED9);
+            transition: transform 0.15s;
             display: flex; align-items: center; justify-content: center;
             font-size: 18px; font-weight: 700; color: white; flex-shrink: 0; text-transform: uppercase;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
         }
+        .chat-item:active .avatar { transform: scale(0.92); }
         .chat-item .info { flex: 1; min-width: 0; }
         .chat-item .info .name { font-weight: 600; font-size: 15px; color: #f0f6fc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .chat-item .info .last-msg { font-size: 13px; color: #8b949e; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px; }
@@ -233,11 +302,11 @@
             display: flex; align-items: center; justify-content: center; flex-shrink: 0;
             cursor: pointer; transition: all 0.2s; background: transparent;
         }
-        .chat-item .checkbox.checked { background: #5865f2; border-color: #5865f2; }
+        .chat-item .checkbox.checked { background: #2AABEE; border-color: #2AABEE; }
         .chat-item .checkbox.checked::after { content: '✓'; color: white; font-size: 12px; }
         .context-menu {
             position: fixed;
-            background: rgba(30, 35, 42, 0.95);
+            background: rgba(23, 33, 43, 0.95);
             border-radius: 12px;
             padding: 8px;
             min-width: 180px;
@@ -271,13 +340,13 @@
             padding: 14px 16px;
             cursor: pointer;
             transition: all 0.2s;
-            border-bottom: 1px solid rgba(22, 27, 34, 0.5);
+            border-bottom: 1px solid rgba(23, 33, 43, 0.5);
             gap: 14px;
             -webkit-tap-highlight-color: transparent;
             touch-action: manipulation;
             min-height: 44px;
         }
-        .account-item:hover { background: rgba(22, 27, 34, 0.5); }
+        .account-item:hover { background: rgba(23, 33, 43, 0.5); }
         .account-item .account-avatar {
             width: 48px; height: 48px; border-radius: 50%;
             background: linear-gradient(135deg, #2b5278, #1a3a5a);
@@ -298,7 +367,7 @@
         .account-item .account-chats-count { font-size: 11px; color: #8b949e; margin-top: 2px; }
         .profile-section { flex: 1; overflow-y: auto; padding: 16px; min-height: 0; }
         .profile-section .info-card {
-            background: rgba(22, 27, 34, 0.8);
+            background: rgba(23, 33, 43, 0.8);
             border-radius: 12px;
             padding: 16px;
             margin-bottom: 12px;
@@ -306,17 +375,18 @@
         }
         .profile-section .info-card .label { color: #8b949e; font-size: 13px; }
         .profile-section .info-card .value { color: #f0f6fc; font-size: 16px; font-weight: 600; margin-top: 4px; }
-        .profile-section .info-card .value.admin-badge { color: #5865f2; font-size: 13px; }
+        .profile-section .info-card .value.admin-badge { color: #2AABEE; font-size: 13px; }
         .profile-section .info-card .value.owner-badge { color: #d29922; font-size: 13px; }
         .profile-btn {
             display: flex; align-items: center; gap: 12px; padding: 14px 16px;
-            background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
+            background: rgba(23, 33, 43, 0.8); border: 1px solid rgba(48, 54, 61, 0.5);
             border-radius: 12px; color: #f0f6fc; cursor: pointer; transition: all 0.2s;
             width: 100%; text-align: left; font-size: 15px; margin-bottom: 8px;
         }
-        .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #5865f2; }
+        .profile-btn:hover { background: rgba(48, 54, 61, 0.5); border-color: #2AABEE; }
+        .profile-btn:active { transform: scale(0.98); }
         .profile-btn .icon { font-size: 20px; }
-        .profile-btn .admin-badge { color: #5865f2; font-size: 12px; margin-left: auto; }
+        .profile-btn .admin-badge { color: #2AABEE; font-size: 12px; margin-left: auto; }
         .admin-input-group {
             display: flex;
             gap: 8px;
@@ -325,17 +395,17 @@
         .admin-input-group input {
             flex: 1;
             padding: 8px 12px;
-            background: rgba(26, 26, 46, 0.8);
+            background: rgba(18, 27, 36, 0.8);
             border: 1px solid rgba(48, 54, 61, 0.5);
             border-radius: 8px;
             color: #f0f6fc;
             font-size: 14px;
             outline: none;
         }
-        .admin-input-group input:focus { border-color: #5865f2; }
+        .admin-input-group input:focus { border-color: #2AABEE; }
         .admin-input-group button {
             padding: 8px 16px;
-            background: #5865f2;
+            background: #2AABEE;
             border: none;
             border-radius: 8px;
             color: white;
@@ -343,7 +413,7 @@
             cursor: pointer;
             transition: all 0.2s;
         }
-        .admin-input-group button:hover { background: #4752c4; }
+        .admin-input-group button:hover { background: #229ED9; }
         .admin-input-group button:disabled { background: #30363d; cursor: not-allowed; }
         .admin-list {
             margin-top: 8px;
@@ -355,7 +425,7 @@
             align-items: center;
             justify-content: space-between;
             padding: 8px 12px;
-            background: rgba(22, 27, 34, 0.5);
+            background: rgba(23, 33, 43, 0.5);
             border-radius: 8px;
             margin-bottom: 4px;
         }
@@ -375,7 +445,7 @@
         .bottom-nav {
             display: flex;
             padding: 8px 16px 12px;
-            background: rgba(22, 27, 34, 0.9);
+            background: rgba(23, 33, 43, 0.9);
             border-top: 1px solid rgba(33, 38, 45, 0.5);
             gap: 8px;
             flex-shrink: 0;
@@ -399,18 +469,9 @@
             touch-action: manipulation;
             min-height: 44px;
         }
-        .bottom-nav .nav-btn.active { color: #5865f2; }
-        .bottom-nav .nav-btn.active::after {
-            content: '';
-            position: absolute;
-            top: -1px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 30px;
-            height: 2px;
-            background: #5865f2;
-            border-radius: 2px;
-        }
+        .bottom-nav .nav-btn.active { color: #6FC6F2; background: rgba(42, 171, 238, 0.14); }
+        .bottom-nav .nav-btn:active .nav-icon { transform: scale(1.15); }
+        .bottom-nav .nav-btn .nav-icon { transition: transform 0.15s; }
         .bottom-nav .nav-btn:hover { color: #f0f6fc; }
         .bottom-nav .nav-btn .nav-icon { font-size: 22px; display: block; margin-bottom: 2px; }
         .messages-view {
@@ -431,10 +492,10 @@
             min-height: 0;
             height: 100%;
         }
-        .msg-wrapper { display: flex; flex-direction: column; max-width: 100%; }
+        .msg-wrapper { display: flex; flex-direction: column; max-width: 100%; animation: fadeIn 0.2s ease; }
         .msg-wrapper .sender-name { font-size: 11px; color: #8b949e; margin-bottom: 1px; padding-left: 10px; }
         .msg-wrapper.outgoing .sender-name { padding-left: 0; padding-right: 10px; text-align: right; }
-        .msg-bubble { padding: 6px 12px; border-radius: 10px; max-width: 85%; word-wrap: break-word; position: relative; font-size: 13px; line-height: 1.4; }
+        .msg-bubble { padding: 6px 12px; border-radius: 10px; max-width: 85%; word-wrap: break-word; position: relative; font-size: 13px; line-height: 1.4; box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15); }
         .msg-wrapper.outgoing { align-self: flex-end; }
         .msg-wrapper.outgoing .msg-bubble { background: #2b5278; color: white; border-bottom-right-radius: 3px; }
         .msg-wrapper.incoming { align-self: flex-start; }
@@ -444,7 +505,7 @@
         .msg-wrapper .msg-bubble.edited-msg { border-left: 4px solid #d29922; background: rgba(210, 153, 34, 0.15) !important; }
         .msg-wrapper .msg-bubble.deleted-msg { border-left: 4px solid #f85149; background: rgba(248, 81, 73, 0.15) !important; color: rgba(255, 255, 255, 0.6) !important; text-decoration: line-through; }
         .msg-wrapper.deleted .delete-icon { margin-left: 4px; font-size: 12px; color: #f85149; }
-        .msg-wrapper.edited .edit-block { margin-top: 3px; padding: 4px 8px; background: rgba(22, 27, 34, 0.8); border-radius: 6px; border-left: 2px solid #d29922; font-size: 11px; max-width: 85%; }
+        .msg-wrapper.edited .edit-block { margin-top: 3px; padding: 4px 8px; background: rgba(23, 33, 43, 0.8); border-radius: 6px; border-left: 2px solid #d29922; font-size: 11px; max-width: 85%; }
         .msg-time { font-size: 10px; color: #8b949e; margin-top: 1px; padding: 0 4px; }
         .msg-bubble audio { width: 100%; max-width: 220px; margin-top: 4px; }
         .empty-state { text-align: center; padding: 40px 20px; color: #8b949e; }
@@ -477,9 +538,9 @@
         .trash-banner button:hover { background: rgba(48, 54, 61, 0.5); color: #f0f6fc; }
         .trash-banner .btn-clear-all { color: #f85149 !important; }
         .trash-banner .btn-clear-all:hover { background: rgba(248, 81, 73, 0.15) !important; color: #ff6b6b !important; }
-        .trash-banner .btn-select-mode { color: #5865f2 !important; }
-        .trash-banner .btn-select-mode:hover { background: rgba(88, 101, 242, 0.15) !important; color: #7b88ff !important; }
-        .trash-banner .btn-select-mode.active { color: #f0f6fc !important; background: rgba(88, 101, 242, 0.2) !important; }
+        .trash-banner .btn-select-mode { color: #2AABEE !important; }
+        .trash-banner .btn-select-mode:hover { background: rgba(42, 171, 238, 0.15) !important; color: #6FC6F2 !important; }
+        .trash-banner .btn-select-mode.active { color: #f0f6fc !important; background: rgba(42, 171, 238, 0.2) !important; }
         .trash-banner .btn-delete-selected { color: #f85149 !important; }
         .trash-banner .btn-delete-selected:hover { background: rgba(248, 81, 73, 0.15) !important; }
         .trash-banner .btn-exit-trash { color: #8b949e !important; }
@@ -577,11 +638,11 @@
             background: rgba(255,255,255,0.2);
         }
         .photo-viewer-overlay .zoom-controls .download-btn {
-            background: #5865f2;
+            background: #2AABEE;
             border: none;
         }
         .photo-viewer-overlay .zoom-controls .download-btn:hover {
-            background: #4752c4;
+            background: #229ED9;
         }
         .photo-viewer-overlay .zoom-level {
             color: rgba(255,255,255,0.5);
@@ -663,12 +724,22 @@
             </div>
             <div id="logs-list" class="logs-list"></div>
             <div id="connections-list" class="connections-list" style="display:none;"></div>
+            <div class="search-bar" id="chat-search-bar" style="display:none;">
+                <span class="search-icon">🔍</span>
+                <input type="text" id="chat-search-input" placeholder="Поиск чатов..." oninput="filterChatsBySearch()" />
+                <button class="search-clear" id="chat-search-clear" onclick="clearChatSearch()" style="display:none;">✕</button>
+            </div>
             <div id="chats-list" class="chats-list" style="display:none;"></div>
             <div id="messages-view" class="messages-view">
                 <div class="header" style="border-bottom: none; padding: 8px 16px;">
                     <button class="back-btn" onclick="backToChats()">← Назад</button>
                     <h1 id="chat-title" style="font-size:15px;">Чат</h1>
-                    <span style="width:40px;"></span>
+                    <button onclick="toggleChatSearch()" id="chat-search-toggle-btn" title="Поиск по сообщениям" style="background:none;border:none;color:#8b949e;font-size:18px;cursor:pointer;padding:4px;">🔍</button>
+                </div>
+                <div class="search-bar" id="msg-search-bar" style="display:none;">
+                    <span class="search-icon">🔍</span>
+                    <input type="text" id="msg-search-input" placeholder="Поиск сообщений в этом чате..." oninput="filterMessagesBySearch()" />
+                    <button class="search-clear" id="msg-search-clear" onclick="clearMessageSearch()" style="display:none;">✕</button>
                 </div>
                 <div id="messages-container" class="messages-container"></div>
             </div>
@@ -1123,7 +1194,7 @@
                         <div class="account-chats-count">📊 Подключён: ${acc.connected_at || '—'}</div>
                     </div>
                     <span class="account-status ${statusClass}">${statusText}</span>
-                    ${isAdmin ? '<span style="font-size:11px;color:#5865f2;">👆 Нажмите</span>' : ''}
+                    ${isAdmin ? '<span style="font-size:11px;color:#2AABEE;">👆 Нажмите</span>' : ''}
                 </div>`;
             }).join('');
         }
@@ -1186,7 +1257,7 @@
                 const isPinned = pinnedChats.has(chat.chat_id);
                 const safeName = displayName.replace(/'/g, "\\'").replace(/"/g, '&quot;');
                 return `<div class="chat-item ${isPinned ? 'pinned' : ''}" onclick="openChat('${chat.chat_id}', '${safeName}')">
-                            <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                            <div class="avatar ${avatarColorClass(displayName)}">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
                             <div class="info">
                                 <div class="name">${displayName} ${isPinned ? '📌' : ''}</div>
                                 <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
@@ -1379,7 +1450,7 @@
                 let photoHtml = '';
                 if (log.content_type === 'photo' && log.file_url) {
                     const fileUrl = log.file_url.startsWith('http') ? log.file_url : `${API_URL}${log.file_url}`;
-                    photoHtml = `<span onclick="event.stopPropagation(); openPhotoViewer('${fileUrl}')" style="cursor:pointer;color:#5865f2;font-size:13px;font-weight:bold;background:rgba(88,101,242,0.1);padding:1px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:2px;margin-left:4px;flex-shrink:0;">📷›</span>`;
+                    photoHtml = `<span onclick="event.stopPropagation(); openPhotoViewer('${fileUrl}')" style="cursor:pointer;color:#2AABEE;font-size:13px;font-weight:bold;background:rgba(88,101,242,0.1);padding:1px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:2px;margin-left:4px;flex-shrink:0;">📷›</span>`;
                 }
 
                 // Имя собеседника для заголовка чата — берём из уже загруженного
@@ -1667,13 +1738,50 @@
                 allChats = data.chats;
                 const visibleChats = getVisibleChats();
                 document.getElementById('chats-count').textContent = visibleChats.length;
-                renderChats(visibleChats);
+                filterChatsBySearch();
             } catch (e) {
                 container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
-        function renderChats(chats) {
+        // Стабильный (по имени) цвет аватарки — как в Telegram, у каждого
+        // контакта свой цвет вместо одного фиксированного на всех.
+        const AVATAR_COLOR_CLASSES = ['avatar-c1', 'avatar-c2', 'avatar-c3', 'avatar-c4', 'avatar-c5', 'avatar-c6', 'avatar-c7', 'avatar-c8'];
+        function avatarColorClass(name) {
+            const str = String(name || '?');
+            let hash = 0;
+            for (let i = 0; i < str.length; i++) {
+                hash = (hash * 31 + str.charCodeAt(i)) >>> 0;
+            }
+            return AVATAR_COLOR_CLASSES[hash % AVATAR_COLOR_CLASSES.length];
+        }
+        // Поиск по чатам — фильтрует allChats по имени собеседника и последнему
+        // сообщению, живьём при вводе.
+        function filterChatsBySearch() {
+            const input = document.getElementById('chat-search-input');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const clearBtn = document.getElementById('chat-search-clear');
+            if (clearBtn) clearBtn.style.display = query ? 'flex' : 'none';
+            const visible = getVisibleChats();
+            const filtered = query
+                ? visible.filter(c => {
+                    const name = (c.other_party_name || c.name || '').toLowerCase();
+                    const lastMsg = (c.last_message || '').toLowerCase();
+                    return name.includes(query) || lastMsg.includes(query);
+                  })
+                : visible;
+            renderChats(filtered, query);
+        }
+        function clearChatSearch() {
+            const input = document.getElementById('chat-search-input');
+            if (input) input.value = '';
+            filterChatsBySearch();
+        }
+        function renderChats(chats, searchQuery) {
             const container = document.getElementById('chats-list');
+            if (searchQuery && chats.length === 0) {
+                container.innerHTML = `<div class="search-no-results">🔍 Ничего не найдено по запросу «${searchQuery}»</div>`;
+                return;
+            }
             const sorted = [...chats].sort((a, b) => {
                 const aPinned = pinnedChats.has(a.chat_id) ? 1 : 0;
                 const bPinned = pinnedChats.has(b.chat_id) ? 1 : 0;
@@ -1698,7 +1806,7 @@
                             style="cursor:pointer; -webkit-tap-highlight-color:transparent; touch-action:manipulation;"
                             ${contextAttr}>
                             ${checkboxHtml}
-                            <div class="avatar">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
+                            <div class="avatar ${avatarColorClass(displayName)}">${(displayName || 'Ч').charAt(0).toUpperCase()}</div>
                             <div class="info">
                                 <div class="name">${displayName} ${statusIcon}</div>
                                 <div class="last-msg">${chat.last_message || 'Нет сообщений'}</div>
@@ -1943,7 +2051,49 @@
             document.getElementById('chats-list').style.display = 'none';
             document.getElementById('account-chats-view').style.display = 'none';
             document.getElementById('messages-view').classList.add('visible');
+            // Сбрасываем поиск сообщений при входе в (новый) чат
+            const msgSearchBar = document.getElementById('msg-search-bar');
+            const msgSearchInput = document.getElementById('msg-search-input');
+            if (msgSearchBar) msgSearchBar.style.display = 'none';
+            if (msgSearchInput) msgSearchInput.value = '';
             loadMessages(chatId);
+        }
+        function toggleChatSearch() {
+            const bar = document.getElementById('msg-search-bar');
+            if (!bar) return;
+            const isVisible = bar.style.display !== 'none';
+            if (isVisible) {
+                bar.style.display = 'none';
+                document.getElementById('msg-search-input').value = '';
+                filterMessagesBySearch();
+            } else {
+                bar.style.display = 'flex';
+                setTimeout(() => document.getElementById('msg-search-input')?.focus(), 50);
+            }
+        }
+        function clearMessageSearch() {
+            const input = document.getElementById('msg-search-input');
+            if (input) input.value = '';
+            filterMessagesBySearch();
+            document.getElementById('msg-search-input')?.focus();
+        }
+        // Поиск сообщений внутри открытого чата — фильтрует уже загруженные
+        // allMessages по тексту (и текущему, и оригинальному до правки).
+        function filterMessagesBySearch() {
+            const input = document.getElementById('msg-search-input');
+            const query = input ? input.value.trim().toLowerCase() : '';
+            const clearBtn = document.getElementById('msg-search-clear');
+            if (clearBtn) clearBtn.style.display = query ? 'flex' : 'none';
+            if (!query) {
+                renderMessages(allMessages);
+                return;
+            }
+            const filtered = allMessages.filter(m => {
+                const text = (m.text_content || '').toLowerCase();
+                const original = (m.original_text || '').toLowerCase();
+                return text.includes(query) || original.includes(query);
+            });
+            renderMessages(filtered, query);
         }
         function backToChats() {
             document.getElementById('messages-view').classList.remove('visible');
@@ -1988,9 +2138,13 @@
                 container.innerHTML = `<div class="empty-state"><p class="error">❌ Ошибка загрузки: ${e.message}</p></div>`;
             }
         }
-        function renderMessages(messages) {
+        function renderMessages(messages, searchQuery) {
             const container = document.getElementById('messages-container');
             container.innerHTML = '';
+            if (searchQuery && messages.length === 0) {
+                container.innerHTML = `<div class="search-no-results">🔍 Ничего не найдено по запросу «${searchQuery}»</div>`;
+                return;
+            }
             let lastSenderId = undefined; // undefined = ещё не было группы
             let msgGroup = [];
             messages.forEach((msg, index) => {
@@ -2057,7 +2211,7 @@
                     // Иконка 📷› с кликом
                     const photoIcon = document.createElement('span');
                     photoIcon.textContent = ' 📷›';
-                    photoIcon.style.cssText = 'cursor:pointer;color:#5865f2;font-weight:bold;font-size:13px;background:rgba(88,101,242,0.1);padding:1px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:2px;margin-left:4px;';
+                    photoIcon.style.cssText = 'cursor:pointer;color:#2AABEE;font-weight:bold;font-size:13px;background:rgba(88,101,242,0.1);padding:1px 8px;border-radius:10px;display:inline-flex;align-items:center;gap:2px;margin-left:4px;';
                     photoIcon.onclick = function(e) {
                         e.stopPropagation();
                         openPhotoViewer(fileUrl);
@@ -2069,7 +2223,7 @@
                     const textSpan = document.createElement('span');
                     textSpan.className = 'msg-text';
                     textSpan.textContent = content ? `${content} 🎞️›` : '🎞️ GIF›';
-                    textSpan.style.cssText = 'cursor:pointer;color:#5865f2;font-weight:bold;';
+                    textSpan.style.cssText = 'cursor:pointer;color:#2AABEE;font-weight:bold;';
                     textSpan.onclick = function(e) {
                         e.stopPropagation();
                         window.open(fileUrl, '_blank');
@@ -2081,7 +2235,7 @@
                     const textSpan = document.createElement('span');
                     textSpan.className = 'msg-text';
                     textSpan.textContent = content ? `${content} 🎥›` : '🎥 Видео›';
-                    textSpan.style.cssText = 'cursor:pointer;color:#5865f2;font-weight:bold;';
+                    textSpan.style.cssText = 'cursor:pointer;color:#2AABEE;font-weight:bold;';
                     textSpan.onclick = function(e) {
                         e.stopPropagation();
                         window.open(fileUrl, '_blank');
@@ -2093,7 +2247,7 @@
                     const textSpan = document.createElement('span');
                     textSpan.className = 'msg-text';
                     textSpan.textContent = content ? `${content} 🖼️›` : '🖼️ Стикер›';
-                    textSpan.style.cssText = 'cursor:pointer;color:#5865f2;font-weight:bold;';
+                    textSpan.style.cssText = 'cursor:pointer;color:#2AABEE;font-weight:bold;';
                     textSpan.onclick = function(e) {
                         e.stopPropagation();
                         window.open(fileUrl, '_blank');
@@ -2126,7 +2280,7 @@
                     const textSpan = document.createElement('span');
                     textSpan.className = 'msg-text';
                     textSpan.textContent = content ? `${content} 📄 ${fileName}` : `📄 ${fileName}`;
-                    textSpan.style.cssText = 'cursor:pointer;color:#5865f2;text-decoration:underline;';
+                    textSpan.style.cssText = 'cursor:pointer;color:#2AABEE;text-decoration:underline;';
                     textSpan.onclick = function(e) {
                         e.stopPropagation();
                         window.open(fileUrl, '_blank');
@@ -2204,6 +2358,7 @@
             const profileView = document.getElementById('profile-view');
             const trashBanner = document.getElementById('trash-banner');
             const filters = document.getElementById('filters');
+            const chatSearchBar = document.getElementById('chat-search-bar');
             logsList.style.display = 'none';
             connectionsList.style.display = 'none';
             chatsList.style.display = 'none';
@@ -2213,6 +2368,7 @@
             profileView.style.display = 'none';
             trashBanner.style.display = 'none';
             filters.style.display = 'none';
+            if (chatSearchBar) chatSearchBar.style.display = 'none';
             if (tab === 'logs') {
                 document.getElementById('tab-logs').classList.add('active');
                 document.getElementById('header-title').textContent = '📋 Логи сообщений';
@@ -2223,6 +2379,7 @@
                 document.getElementById('tab-chats').classList.add('active');
                 document.getElementById('header-title').textContent = '💬 Чаты';
                 chatsList.style.display = 'block';
+                if (chatSearchBar) chatSearchBar.style.display = 'flex';
                 if (trashMode) trashBanner.style.display = 'flex';
                 loadChats();
             } else if (tab === 'connections') {
